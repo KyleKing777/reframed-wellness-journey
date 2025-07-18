@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ interface MealState {
 const MealLogging = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIngredients, setSelectedIngredients] = useState<Ingredient[]>([]);
   const [currentMeal, setCurrentMeal] = useState<MealState>({
@@ -39,6 +41,16 @@ const MealLogging = () => {
     totalFats: 0,
     mealType: getMealTypeByTime()
   });
+
+  // Update meal type if passed from navigation
+  useEffect(() => {
+    if (location.state?.mealType) {
+      setCurrentMeal(prev => ({
+        ...prev,
+        mealType: location.state.mealType
+      }));
+    }
+  }, [location.state]);
 
   function getMealTypeByTime(): string {
     const hour = new Date().getHours();
