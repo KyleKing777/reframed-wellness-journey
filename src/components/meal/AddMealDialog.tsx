@@ -4,13 +4,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Camera, FileText, List, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface AddMealDialogProps {
   isOpen: boolean;
   onClose: () => void;
   selectedMealType: string;
   onMealTypeChange: (type: string) => void;
+  onAddByDescription: () => void;
+  onAddByIngredient: () => void;
+  onAddByPhoto: () => void;
 }
 
 const mealTypes = [
@@ -22,26 +24,15 @@ const mealTypes = [
   'Late Night Snack'
 ];
 
-export const AddMealDialog = ({ isOpen, onClose, selectedMealType, onMealTypeChange }: AddMealDialogProps) => {
-  const navigate = useNavigate();
-
-  const handleAddByIngredient = () => {
-    onClose();
-    navigate('/meal-logging', { state: { mealType: selectedMealType } });
-  };
-
-  const handleAddByDescription = () => {
-    onClose();
-    // TODO: Implement description-based meal logging
-    console.log('Add by description - to be implemented');
-  };
-
-  const handleAddByPhoto = () => {
-    onClose();
-    // TODO: Implement photo-based meal logging
-    console.log('Add by photo - to be implemented');
-  };
-
+export const AddMealDialog = ({ 
+  isOpen, 
+  onClose, 
+  selectedMealType, 
+  onMealTypeChange,
+  onAddByDescription,
+  onAddByIngredient,
+  onAddByPhoto
+}: AddMealDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -79,7 +70,7 @@ export const AddMealDialog = ({ isOpen, onClose, selectedMealType, onMealTypeCha
             
             <div className="space-y-3">
               <Button
-                onClick={handleAddByDescription}
+                onClick={onAddByDescription}
                 variant="outline"
                 className="w-full h-16 flex-col gap-2 hover:bg-accent"
               >
@@ -88,7 +79,7 @@ export const AddMealDialog = ({ isOpen, onClose, selectedMealType, onMealTypeCha
               </Button>
 
               <Button
-                onClick={handleAddByIngredient}
+                onClick={onAddByIngredient}
                 variant="outline"
                 className="w-full h-16 flex-col gap-2 hover:bg-accent"
               >
@@ -97,7 +88,7 @@ export const AddMealDialog = ({ isOpen, onClose, selectedMealType, onMealTypeCha
               </Button>
 
               <Button
-                onClick={handleAddByPhoto}
+                onClick={onAddByPhoto}
                 variant="outline"
                 className="w-full h-16 flex-col gap-2 hover:bg-accent"
               >

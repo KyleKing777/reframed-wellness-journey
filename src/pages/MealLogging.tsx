@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Check, Heart } from 'lucide-react';
+import { Plus, Search, Check, Heart, Utensils, Camera, FileText, List } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { AddMealDialog } from '@/components/meal/AddMealDialog';
 
 interface Ingredient {
   name: string;
@@ -27,12 +28,24 @@ interface MealState {
   mealType: string;
 }
 
+const mealTypes = [
+  'Breakfast',
+  'Lunch', 
+  'Dinner',
+  'Morning Snack',
+  'Afternoon Snack',
+  'Late Night Snack'
+];
+
 const MealLogging = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIngredients, setSelectedIngredients] = useState<Ingredient[]>([]);
+  const [isAddMealOpen, setIsAddMealOpen] = useState(false);
+  const [selectedMealType, setSelectedMealType] = useState(getMealTypeByTime());
+  const [showIngredientForm, setShowIngredientForm] = useState(false);
   const [currentMeal, setCurrentMeal] = useState<MealState>({
     ingredients: [],
     totalCalories: 0,
@@ -45,6 +58,7 @@ const MealLogging = () => {
   // Update meal type if passed from navigation
   useEffect(() => {
     if (location.state?.mealType) {
+      setSelectedMealType(location.state.mealType);
       setCurrentMeal(prev => ({
         ...prev,
         mealType: location.state.mealType
@@ -57,11 +71,33 @@ const MealLogging = () => {
     
     if (hour >= 4 && hour < 11) return 'Breakfast';
     if (hour >= 11 && hour < 15) return 'Lunch';
-    if (hour >= 15 && hour < 18) return 'Snack';
+    if (hour >= 15 && hour < 18) return 'Afternoon Snack';
     if (hour >= 18 || hour < 4) return 'Dinner';
     
-    return 'Snack';
+    return 'Morning Snack';
   }
+
+  const handleAddMeal = () => {
+    setSelectedMealType(getMealTypeByTime());
+    setIsAddMealOpen(true);
+  };
+
+  const handleAddByIngredient = () => {
+    setIsAddMealOpen(false);
+    setShowIngredientForm(true);
+  };
+
+  const handleAddByDescription = () => {
+    setIsAddMealOpen(false);
+    // TODO: Implement description-based meal logging
+    console.log('Add by description - to be implemented');
+  };
+
+  const handleAddByPhoto = () => {
+    setIsAddMealOpen(false);
+    // TODO: Implement photo-based meal logging
+    console.log('Add by photo - to be implemented');
+  };
 
   // Sample nutrition data - in a real app, this would come from an external API
   const sampleNutritionData: Record<string, Omit<Ingredient, 'quantity'>> = {
@@ -111,6 +147,7 @@ const MealLogging = () => {
     setCurrentMeal(prev => ({
       ...prev,
       ingredients,
+      mealType: selectedMealType,
       ...totals
     }));
   };
@@ -177,6 +214,7 @@ const MealLogging = () => {
         totalFats: 0,
         mealType: getMealTypeByTime()
       });
+      setShowIngredientForm(false);
 
     } catch (error) {
       console.error('Error saving meal:', error);
@@ -208,141 +246,255 @@ const MealLogging = () => {
     }, 1000);
   };
 
-  return (
-    <div className="p-4 space-y-6 max-w-2xl mx-auto">
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-foreground mb-2">Log Your Meal</h1>
-        <p className="text-muted-foreground">Every bite is a step forward in your journey</p>
-      </div>
+  // If showing ingredient form, render the ingredient logging interface
+  if (showIngredientForm) {
+    return (
+      <div className="p-4 space-y-6 max-w-2xl mx-auto">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Log Your Meal</h1>
+          <p className="text-muted-foreground">Every bite is a step forward in your journey</p>
+        </div>
 
-      {/* Meal Type Selector */}
-      <Card className="shadow-gentle">
-        <CardContent className="pt-6">
-          <div className="flex gap-2 mb-4">
-            {['Breakfast', 'Lunch', 'Snack', 'Dinner'].map((type) => (
-              <Button
-                key={type}
-                variant={currentMeal.mealType === type ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setCurrentMeal(prev => ({ ...prev, mealType: type }))}
-              >
-                {type}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Search Bar */}
-      <Card className="shadow-gentle">
-        <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search for ingredients..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          {/* Search Results */}
-          {searchTerm && (
-            <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
-              {filteredIngredients.map((key) => {
-                const ingredient = sampleNutritionData[key];
-                return (
-                  <div
-                    key={key}
-                    className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
-                    onClick={() => addIngredient(key)}
-                  >
-                    <div>
-                      <p className="font-medium">{ingredient.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {ingredient.calories} cal, {ingredient.protein}g protein
-                      </p>
-                    </div>
-                    <Plus className="w-5 h-5 text-primary" />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Selected Ingredients */}
-      {selectedIngredients.length > 0 && (
+        {/* Meal Type Selector */}
         <Card className="shadow-gentle">
-          <CardHeader>
-            <CardTitle>Your {currentMeal.mealType}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {selectedIngredients.map((ingredient, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-accent/30 rounded-lg">
-                <div>
-                  <p className="font-medium">{ingredient.name}</p>
-                  <p className="text-sm text-muted-foreground">{ingredient.quantity}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">{ingredient.calories} cal</p>
-                  <div className="flex gap-2 text-xs text-muted-foreground">
-                    <span>P: {ingredient.protein}g</span>
-                    <span>C: {ingredient.carbs}g</span>
-                    <span>F: {ingredient.fats}g</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Meal Totals */}
-            <div className="pt-4 border-t border-border">
-              <div className="flex justify-between items-center mb-3">
-                <span className="font-semibold">Total</span>
-                <span className="font-bold text-primary">{currentMeal.totalCalories} calories</span>
-              </div>
-              <div className="flex gap-4 text-sm">
-                <Badge variant="secondary">Protein: {currentMeal.totalProtein.toFixed(1)}g</Badge>
-                <Badge variant="secondary">Carbs: {currentMeal.totalCarbs.toFixed(1)}g</Badge>
-                <Badge variant="secondary">Fat: {currentMeal.totalFats.toFixed(1)}g</Badge>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={() => {
-                  setSelectedIngredients([]);
-                  updateMealTotals([]);
-                }}
-              >
-                Clear All
-              </Button>
-              <Button 
-                onClick={completeMeal}
-                className="flex-1 bg-success hover:bg-success/90 text-success-foreground"
-              >
-                <Heart className="w-4 h-4 mr-2" />
-                Perfect!
-              </Button>
+          <CardContent className="pt-6">
+            <div className="flex gap-2 mb-4">
+              {mealTypes.map((type) => (
+                <Button
+                  key={type}
+                  variant={selectedMealType === type ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    setSelectedMealType(type);
+                    setCurrentMeal(prev => ({ ...prev, mealType: type }));
+                  }}
+                >
+                  {type}
+                </Button>
+              ))}
             </div>
           </CardContent>
         </Card>
-      )}
 
-      {/* Encouraging Message */}
+        {/* Search Bar */}
+        <Card className="shadow-gentle">
+          <CardContent className="pt-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search for ingredients..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Search Results */}
+            {searchTerm && (
+              <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
+                {filteredIngredients.map((key) => {
+                  const ingredient = sampleNutritionData[key];
+                  return (
+                    <div
+                      key={key}
+                      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
+                      onClick={() => addIngredient(key)}
+                    >
+                      <div>
+                        <p className="font-medium">{ingredient.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {ingredient.calories} cal, {ingredient.protein}g protein
+                        </p>
+                      </div>
+                      <Plus className="w-5 h-5 text-primary" />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Selected Ingredients */}
+        {selectedIngredients.length > 0 && (
+          <Card className="shadow-gentle">
+            <CardHeader>
+              <CardTitle>Your {selectedMealType}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {selectedIngredients.map((ingredient, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-accent/30 rounded-lg">
+                  <div>
+                    <p className="font-medium">{ingredient.name}</p>
+                    <p className="text-sm text-muted-foreground">{ingredient.quantity}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{ingredient.calories} cal</p>
+                    <div className="flex gap-2 text-xs text-muted-foreground">
+                      <span>P: {ingredient.protein}g</span>
+                      <span>C: {ingredient.carbs}g</span>
+                      <span>F: {ingredient.fats}g</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Meal Totals */}
+              <div className="pt-4 border-t border-border">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="font-semibold">Total</span>
+                  <span className="font-bold text-primary">{currentMeal.totalCalories} calories</span>
+                </div>
+                <div className="flex gap-4 text-sm">
+                  <Badge variant="secondary">Protein: {currentMeal.totalProtein.toFixed(1)}g</Badge>
+                  <Badge variant="secondary">Carbs: {currentMeal.totalCarbs.toFixed(1)}g</Badge>
+                  <Badge variant="secondary">Fat: {currentMeal.totalFats.toFixed(1)}g</Badge>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setSelectedIngredients([]);
+                    updateMealTotals([]);
+                  }}
+                >
+                  Clear All
+                </Button>
+                <Button 
+                  onClick={completeMeal}
+                  className="flex-1 bg-success hover:bg-success/90 text-success-foreground"
+                >
+                  <Heart className="w-4 h-4 mr-2" />
+                  Perfect!
+                </Button>
+              </div>
+
+              {/* Back Button */}
+              <Button 
+                variant="ghost" 
+                className="w-full mt-4"
+                onClick={() => setShowIngredientForm(false)}
+              >
+                Back to Home
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Encouraging Message */}
+        <Card className="bg-gradient-healing border-primary/20 shadow-gentle">
+          <CardContent className="pt-6 text-center">
+            <Heart className="w-8 h-8 text-primary mx-auto mb-3" />
+            <p className="text-foreground font-medium mb-2">You're doing amazing!</p>
+            <p className="text-sm text-muted-foreground">
+              Every meal is a loving act of self-care. Your body appreciates the nourishment.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Main home page interface
+  return (
+    <div className="p-4 space-y-6 max-w-2xl mx-auto">
+      {/* Welcome Section */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back!</h1>
+        <p className="text-muted-foreground">Every meal is a step forward in your healing journey</p>
+      </div>
+
+      {/* Main Add Meal Section */}
+      <Card className="shadow-gentle border-primary/20">
+        <CardContent className="pt-6">
+          <div className="text-center space-y-6">
+            <div className="mx-auto w-16 h-16 bg-gradient-healing rounded-full flex items-center justify-center mb-4">
+              <Utensils className="w-8 h-8 text-primary" />
+            </div>
+            
+            <div>
+              <h2 className="text-xl font-semibold text-foreground mb-2">Ready to nourish yourself?</h2>
+              <p className="text-muted-foreground text-sm">Track your meal and celebrate this act of self-care</p>
+            </div>
+
+            <Button
+              onClick={handleAddMeal}
+              size="lg"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-4 text-lg font-medium"
+            >
+              <Plus className="w-6 h-6 mr-2" />
+              Add a Meal
+            </Button>
+
+            {/* Meal Type Selector */}
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-foreground">Select meal type:</p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {mealTypes.map((type) => (
+                  <Badge
+                    key={type}
+                    variant={selectedMealType === type ? 'default' : 'outline'}
+                    className={`cursor-pointer transition-colors ${
+                      selectedMealType === type 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'hover:bg-accent'
+                    }`}
+                    onClick={() => setSelectedMealType(type)}
+                  >
+                    {type}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="shadow-gentle">
+          <CardContent className="pt-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">3</div>
+              <p className="text-sm text-muted-foreground">Meals Today</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="shadow-gentle">
+          <CardContent className="pt-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-success">7</div>
+              <p className="text-sm text-muted-foreground">Day Streak</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Encouragement Card */}
       <Card className="bg-gradient-healing border-primary/20 shadow-gentle">
         <CardContent className="pt-6 text-center">
-          <Heart className="w-8 h-8 text-primary mx-auto mb-3" />
-          <p className="text-foreground font-medium mb-2">You're doing amazing!</p>
+          <h3 className="font-semibold text-foreground mb-2">You're doing wonderful! 💚</h3>
           <p className="text-sm text-muted-foreground">
-            Every meal is a loving act of self-care. Your body appreciates the nourishment.
+            Each meal you log is an act of kindness toward yourself. Your body appreciates the nourishment and care.
           </p>
         </CardContent>
       </Card>
+
+      {/* Add Meal Dialog */}
+      <AddMealDialog
+        isOpen={isAddMealOpen}
+        onClose={() => setIsAddMealOpen(false)}
+        selectedMealType={selectedMealType}
+        onMealTypeChange={setSelectedMealType}
+        onAddByDescription={handleAddByDescription}
+        onAddByIngredient={handleAddByIngredient}
+        onAddByPhoto={handleAddByPhoto}
+      />
     </div>
   );
 };
