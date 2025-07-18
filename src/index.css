@@ -2,43 +2,73 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* ReframED Design System - Recovery-focused, calming, supportive
+All colors MUST be HSL for proper theming.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Calming sage green primary - represents growth and healing */
+    --background: 120 25% 97%;
+    --foreground: 215 25% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Soft, supportive card backgrounds */
+    --card: 120 30% 98%;
+    --card-foreground: 215 25% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 120 30% 98%;
+    --popover-foreground: 215 25% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Gentle sage primary for key actions */
+    --primary: 150 30% 45%;
+    --primary-foreground: 120 25% 97%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Warm, nurturing secondary */
+    --secondary: 45 35% 92%;
+    --secondary-foreground: 215 25% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Soft muted tones */
+    --muted: 120 20% 94%;
+    --muted-foreground: 215 15% 55%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Gentle accent for highlights */
+    --accent: 180 25% 88%;
+    --accent-foreground: 215 25% 25%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Soft warning for gentle alerts */
+    --destructive: 15 75% 65%;
+    --destructive-foreground: 120 25% 97%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Subtle borders and inputs */
+    --border: 120 15% 88%;
+    --input: 120 15% 95%;
+    --ring: 150 30% 45%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* App-specific design tokens */
+    --success: 120 45% 50%;
+    --success-foreground: 120 25% 97%;
+    --warning: 45 85% 65%;
+    --warning-foreground: 215 25% 15%;
+    --info: 200 50% 60%;
+    --info-foreground: 120 25% 97%;
+
+    /* Gradients for supportive UI elements */
+    --gradient-healing: linear-gradient(135deg, hsl(120 40% 85%), hsl(150 35% 82%));
+    --gradient-calm: linear-gradient(180deg, hsl(180 30% 92%), hsl(120 25% 95%));
+    --gradient-progress: linear-gradient(90deg, hsl(150 40% 75%), hsl(120 35% 80%));
+
+    /* Shadows for depth and comfort */
+    --shadow-gentle: 0 2px 8px -2px hsl(120 20% 60% / 0.15);
+    --shadow-card: 0 4px 12px -3px hsl(120 25% 50% / 0.12);
+    --shadow-focus: 0 0 0 3px hsl(150 30% 45% / 0.2);
+
+    /* Animation timing for smooth, calming interactions */
+    --transition-gentle: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    --sidebar-background: 120 30% 96%;
 
     --sidebar-foreground: 240 5.3% 26.1%;
 
