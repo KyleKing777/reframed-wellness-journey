@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,53 +56,39 @@ const Chat = () => {
     }
   };
 
-  const generateBotResponse = (userMessage: string, mode: string): string => {
-    // This is a placeholder for GPT integration
-    // In a real app, this would call your GPT API
-    
-    const responses = {
-      ACT: [
-        "I hear you, and what you're feeling is completely valid. Remember, thoughts and feelings are like clouds - they come and go. What matters is how we choose to act in alignment with our values.",
-        "Your recovery journey is unique to you. Every step forward, no matter how small, is an act of courage and self-compassion.",
-        "It's natural to have difficult moments. What's one small thing you can do right now that aligns with caring for yourself?"
-      ],
-      CBT: [
-        "Let's look at this thought together. Is there evidence for and against it? Sometimes our minds can play tricks on us, especially during recovery.",
-        "I notice you might be having some challenging thoughts. Remember, thoughts are not facts. What would you tell a friend who was having this same thought?",
-        "Recovery involves relearning how to think about food, your body, and yourself. Each positive choice you make is rewiring your brain for healing."
-      ],
-      DBT: [
-        "What you're experiencing sounds really hard. Let's practice some grounding - can you name 5 things you can see around you right now?",
-        "Your feelings are completely valid, and you're learning new ways to cope. What distress tolerance skill might be helpful right now?",
-        "Recovery is about building a life worth living. You're doing the hard work of healing, and that takes incredible strength."
-      ]
-    };
-
-    const modeResponses = responses[mode];
-    return modeResponses[Math.floor(Math.random() * modeResponses.length)];
-  };
-
   const sendMessage = async () => {
     if (!currentMessage.trim() || !user) return;
 
     setIsLoading(true);
     
     try {
-      // Generate bot response
-      const botResponse = generateBotResponse(currentMessage, therapyMode);
+      console.log(`Sending message with ${therapyMode} mode`);
       
+      // Call the AI chat function
+      const { data, error } = await supabase.functions.invoke('chat-ai', {
+        body: {
+          message: currentMessage,
+          therapyMode: therapyMode,
+          userId: user.id
+        }
+      });
+
+      if (error) throw error;
+
+      const botResponse = data.response;
+
       // Save to database
-      const { error } = await supabase
+      const { error: dbError } = await supabase
         .from('ChatbotLogs')
         .insert({
           user_id: user.id,
           timestamp: new Date().toISOString(),
           message_user: currentMessage,
           message_bot: botResponse,
-          context: 'support'
+          context: therapyMode.toLowerCase()
         });
 
-      if (error) throw error;
+      if (dbError) throw dbError;
 
       // Update local state
       const newMessage: Message = {
@@ -109,11 +96,13 @@ const Chat = () => {
         message_user: currentMessage,
         message_bot: botResponse,
         timestamp: new Date().toISOString(),
-        context: 'support'
+        context: therapyMode.toLowerCase()
       };
 
       setMessages(prev => [...prev, newMessage]);
       setCurrentMessage('');
+
+      console.log('Message sent and saved successfully');
 
     } catch (error) {
       console.error('Error sending message:', error);
