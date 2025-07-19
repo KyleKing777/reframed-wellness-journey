@@ -401,89 +401,51 @@ const MealLogging = () => {
 
   // Main home page interface
   return (
-    <div className="p-4 space-y-6 max-w-2xl mx-auto">
-      {/* Welcome Section */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back!</h1>
-        <p className="text-muted-foreground">Every meal is a step forward in your healing journey</p>
+    <div className="p-6 max-w-lg mx-auto">
+      {/* Minimal Header */}
+      <div className="mb-12">
+        <h1 className="text-lg font-medium text-foreground mb-1">ReframED</h1>
+        <p className="text-muted-foreground text-sm">Track your progress</p>
       </div>
 
-      {/* Main Add Meal Section */}
-      <Card className="shadow-gentle border-primary/20">
-        <CardContent className="pt-6">
-          <div className="text-center space-y-6">
-            <div className="mx-auto w-16 h-16 bg-gradient-healing rounded-full flex items-center justify-center mb-4">
-              <Utensils className="w-8 h-8 text-primary" />
-            </div>
-            
-            <div>
-              <h2 className="text-xl font-semibold text-foreground mb-2">Ready to nourish yourself?</h2>
-              <p className="text-muted-foreground text-sm">Track your meal and celebrate this act of self-care</p>
-            </div>
+      {/* Main Action */}
+      <div className="space-y-8">
+        <Button
+          onClick={handleAddMeal}
+          className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-base font-medium transition-fast"
+        >
+          Add Meal
+        </Button>
 
-            <Button
-              onClick={handleAddMeal}
-              size="lg"
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-4 text-lg font-medium"
+        {/* Meal Type Pills */}
+        <div className="flex flex-wrap gap-2">
+          {mealTypes.map((type) => (
+            <button
+              key={type}
+              className={`px-3 py-1.5 rounded-full text-sm transition-fast ${
+                selectedMealType === type 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-muted text-muted-foreground hover:bg-border'
+              }`}
+              onClick={() => setSelectedMealType(type)}
             >
-              <Plus className="w-6 h-6 mr-2" />
-              Add a Meal
-            </Button>
-
-            {/* Meal Type Selector */}
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-foreground">Select meal type:</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {mealTypes.map((type) => (
-                  <Badge
-                    key={type}
-                    variant={selectedMealType === type ? 'default' : 'outline'}
-                    className={`cursor-pointer transition-colors ${
-                      selectedMealType === type 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'hover:bg-accent'
-                    }`}
-                    onClick={() => setSelectedMealType(type)}
-                  >
-                    {type}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="shadow-gentle">
-          <CardContent className="pt-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary">3</div>
-              <p className="text-sm text-muted-foreground">Meals Today</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="shadow-gentle">
-          <CardContent className="pt-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-success">7</div>
-              <p className="text-sm text-muted-foreground">Day Streak</p>
-            </div>
-          </CardContent>
-        </Card>
+              {type}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Encouragement Card */}
-      <Card className="bg-gradient-healing border-primary/20 shadow-gentle">
-        <CardContent className="pt-6 text-center">
-          <h3 className="font-semibold text-foreground mb-2">You're doing wonderful! 💚</h3>
-          <p className="text-sm text-muted-foreground">
-            Each meal you log is an act of kindness toward yourself. Your body appreciates the nourishment and care.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Simple Stats */}
+      <div className="grid grid-cols-2 gap-4 mt-12">
+        <div className="text-center p-4">
+          <div className="text-xl font-semibold text-foreground">3</div>
+          <p className="text-xs text-muted-foreground">Meals</p>
+        </div>
+        <div className="text-center p-4">
+          <div className="text-xl font-semibold text-foreground">7</div>
+          <p className="text-xs text-muted-foreground">Days</p>
+        </div>
+      </div>
 
       {/* Add Meal Dialog */}
       <AddMealDialog

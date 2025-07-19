@@ -2,71 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ReframED Design System - Recovery-focused, calming, supportive
+/* Tech-forward Design System - Minimal, sleek, futuristic
 All colors MUST be HSL for proper theming.
 */
 
 @layer base {
   :root {
-    /* Calming sage green primary - represents growth and healing */
-    --background: 120 25% 97%;
-    --foreground: 215 25% 15%;
+    /* Pure, minimal backgrounds */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
 
-    /* Soft, supportive card backgrounds */
-    --card: 120 30% 98%;
-    --card-foreground: 215 25% 15%;
+    /* Clean card surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
 
-    --popover: 120 30% 98%;
-    --popover-foreground: 215 25% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
 
-    /* Gentle sage primary for key actions */
-    --primary: 150 30% 45%;
-    --primary-foreground: 120 25% 97%;
+    /* Bold accent for key actions */
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
 
-    /* Warm, nurturing secondary */
-    --secondary: 45 35% 92%;
-    --secondary-foreground: 215 25% 25%;
+    /* Subtle secondary */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
 
-    /* Soft muted tones */
-    --muted: 120 20% 94%;
-    --muted-foreground: 215 15% 55%;
+    /* Minimal muted tones */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    /* Gentle accent for highlights */
-    --accent: 180 25% 88%;
-    --accent-foreground: 215 25% 25%;
+    /* Ghost accent for highlights */
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
 
-    /* Soft warning for gentle alerts */
-    --destructive: 15 75% 65%;
-    --destructive-foreground: 120 25% 97%;
+    /* Clean destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
 
-    /* Subtle borders and inputs */
-    --border: 120 15% 88%;
-    --input: 120 15% 95%;
-    --ring: 150 30% 45%;
+    /* Invisible borders */
+    --border: 0 0% 90%;
+    --input: 0 0% 96%;
+    --ring: 0 0% 9%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* App-specific design tokens */
-    --success: 120 45% 50%;
-    --success-foreground: 120 25% 97%;
-    --warning: 45 85% 65%;
-    --warning-foreground: 215 25% 15%;
-    --info: 200 50% 60%;
-    --info-foreground: 120 25% 97%;
+    /* App-specific tokens */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 9%;
+    --info: 221 83% 53%;
+    --info-foreground: 0 0% 98%;
 
-    /* Gradients for supportive UI elements */
-    --gradient-healing: linear-gradient(135deg, hsl(120 40% 85%), hsl(150 35% 82%));
-    --gradient-calm: linear-gradient(180deg, hsl(180 30% 92%), hsl(120 25% 95%));
-    --gradient-progress: linear-gradient(90deg, hsl(150 40% 75%), hsl(120 35% 80%));
+    /* Minimal gradients */
+    --gradient-tech: linear-gradient(135deg, hsl(0 0% 98%), hsl(0 0% 96%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --gradient-accent: linear-gradient(90deg, hsl(0 0% 9%), hsl(0 0% 6%));
 
-    /* Shadows for depth and comfort */
-    --shadow-gentle: 0 2px 8px -2px hsl(120 20% 60% / 0.15);
-    --shadow-card: 0 4px 12px -3px hsl(120 25% 50% / 0.12);
-    --shadow-focus: 0 0 0 3px hsl(150 30% 45% / 0.2);
+    /* Ultra-minimal shadows */
+    --shadow-subtle: 0 1px 3px hsl(0 0% 0% / 0.05);
+    --shadow-card: 0 1px 6px hsl(0 0% 0% / 0.08);
+    --shadow-focus: 0 0 0 2px hsl(0 0% 9% / 0.2);
 
-    /* Animation timing for smooth, calming interactions */
-    --transition-gentle: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-smooth: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    /* Snappy animations */
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 120 30% 96%;
 
@@ -86,41 +86,41 @@ All colors MUST be HSL for proper theming.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 0 0% 10%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 0 0% 15%;
+    --input: 0 0% 10%;
+    --ring: 0 0% 98%;
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 9%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 0 0% 98%;
   }
 }
 
