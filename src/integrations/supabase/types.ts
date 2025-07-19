@@ -119,6 +119,7 @@ export type Database = {
           date: string | null
           id: number
           meal_type: string | null
+          name: string | null
           total_calories: number | null
           total_carbs: number | null
           total_fat: number | null
@@ -130,6 +131,7 @@ export type Database = {
           date?: string | null
           id?: number
           meal_type?: string | null
+          name?: string | null
           total_calories?: number | null
           total_carbs?: number | null
           total_fat?: number | null
@@ -141,6 +143,7 @@ export type Database = {
           date?: string | null
           id?: number
           meal_type?: string | null
+          name?: string | null
           total_calories?: number | null
           total_carbs?: number | null
           total_fat?: number | null

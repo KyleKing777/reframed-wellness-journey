@@ -77,13 +77,13 @@ export default {
 				}
 			},
 			backgroundImage: {
-				'gradient-tech': 'var(--gradient-tech)',
+				'gradient-primary': 'var(--gradient-primary)',
 				'gradient-subtle': 'var(--gradient-subtle)',
-				'gradient-accent': 'var(--gradient-accent)'
+				'gradient-healing': 'var(--gradient-healing)'
 			},
 			boxShadow: {
-				'subtle': 'var(--shadow-subtle)',
-				'card': 'var(--shadow-card)',
+				'gentle': 'var(--shadow-gentle)',
+				'glow': 'var(--shadow-glow)',
 				'focus': 'var(--shadow-focus)'
 			},
 			transitionTimingFunction: {

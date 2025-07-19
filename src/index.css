@@ -2,71 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Tech-forward Design System - Minimal, sleek, futuristic
+/* Bubbly, Welcoming Design System - Warm, encouraging, healing
 All colors MUST be HSL for proper theming.
 */
 
 @layer base {
   :root {
-    /* Pure, minimal backgrounds */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
+    /* Warm, welcoming backgrounds */
+    --background: 220 13% 18%;
+    --foreground: 220 30% 92%;
 
-    /* Clean card surfaces */
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    /* Friendly card surfaces */
+    --card: 220 13% 20%;
+    --card-foreground: 220 20% 85%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
+    --popover: 220 13% 18%;
+    --popover-foreground: 220 20% 85%;
 
-    /* Bold accent for key actions */
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
+    /* Magical purple primary */
+    --primary: 280 100% 70%;
+    --primary-foreground: 220 13% 18%;
 
-    /* Subtle secondary */
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
+    /* Soft secondary */
+    --secondary: 220 13% 25%;
+    --secondary-foreground: 220 20% 85%;
 
-    /* Minimal muted tones */
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    /* Gentle muted tones */
+    --muted: 220 13% 25%;
+    --muted-foreground: 220 10% 60%;
 
-    /* Ghost accent for highlights */
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 9%;
+    /* Warm accent */
+    --accent: 220 13% 25%;
+    --accent-foreground: 220 20% 85%;
 
-    /* Clean destructive */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
+    /* Gentle destructive */
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
 
-    /* Invisible borders */
-    --border: 0 0% 90%;
-    --input: 0 0% 96%;
-    --ring: 0 0% 9%;
+    /* Soft borders */
+    --border: 220 13% 28%;
+    --input: 220 13% 28%;
+    --ring: 280 100% 70%;
 
-    --radius: 0.5rem;
+    --radius: 12px;
 
-    /* App-specific tokens */
+    /* App-specific healing tokens */
     --success: 142 76% 36%;
-    --success-foreground: 0 0% 98%;
+    --success-foreground: 220 13% 18%;
     --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 9%;
+    --warning-foreground: 220 13% 18%;
     --info: 221 83% 53%;
-    --info-foreground: 0 0% 98%;
+    --info-foreground: 220 13% 18%;
 
-    /* Minimal gradients */
-    --gradient-tech: linear-gradient(135deg, hsl(0 0% 98%), hsl(0 0% 96%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
-    --gradient-accent: linear-gradient(90deg, hsl(0 0% 9%), hsl(0 0% 6%));
+    /* Bubbly gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(280 100% 70%), hsl(260 100% 75%));
+    --gradient-subtle: linear-gradient(180deg, hsl(220 13% 22%), hsl(220 13% 18%));
+    --gradient-healing: linear-gradient(135deg, hsl(280 100% 70% / 0.1), hsl(260 100% 75% / 0.1));
 
-    /* Ultra-minimal shadows */
-    --shadow-subtle: 0 1px 3px hsl(0 0% 0% / 0.05);
-    --shadow-card: 0 1px 6px hsl(0 0% 0% / 0.08);
-    --shadow-focus: 0 0 0 2px hsl(0 0% 9% / 0.2);
+    /* Welcoming shadows */
+    --shadow-gentle: 0 4px 20px hsl(280 100% 70% / 0.15);
+    --shadow-glow: 0 0 40px hsl(280 100% 70% / 0.25);
+    --shadow-focus: 0 0 0 2px hsl(280 100% 70% / 0.3);
 
-    /* Snappy animations */
-    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Smooth animations */
+    --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 120 30% 96%;
 
@@ -86,41 +86,42 @@ All colors MUST be HSL for proper theming.
   }
 
   .dark {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 98%;
+    /* Keep the same bubbly theme for dark mode */
+    --background: 220 13% 18%;
+    --foreground: 220 30% 92%;
 
-    --card: 0 0% 6%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 13% 20%;
+    --card-foreground: 220 20% 85%;
 
-    --popover: 0 0% 6%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 13% 18%;
+    --popover-foreground: 220 20% 85%;
 
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 280 100% 70%;
+    --primary-foreground: 220 13% 18%;
 
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 220 13% 25%;
+    --secondary-foreground: 220 20% 85%;
 
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 220 13% 25%;
+    --muted-foreground: 220 10% 60%;
 
-    --accent: 0 0% 10%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 220 13% 25%;
+    --accent-foreground: 220 20% 85%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 10%;
-    --ring: 0 0% 98%;
-    --sidebar-background: 0 0% 6%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 0 0% 98%;
-    --sidebar-primary-foreground: 0 0% 9%;
-    --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 0 0% 98%;
+    --border: 220 13% 28%;
+    --input: 220 13% 28%;
+    --ring: 280 100% 70%;
+    --sidebar-background: 220 13% 20%;
+    --sidebar-foreground: 220 20% 85%;
+    --sidebar-primary: 280 100% 70%;
+    --sidebar-primary-foreground: 220 13% 18%;
+    --sidebar-accent: 220 13% 25%;
+    --sidebar-accent-foreground: 220 20% 85%;
+    --sidebar-border: 220 13% 28%;
+    --sidebar-ring: 280 100% 70%;
   }
 }
 

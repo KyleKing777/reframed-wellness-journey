@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AddMealDialog } from '@/components/meal/AddMealDialog';
+import { MealDescriptionDialog } from '@/components/meal/MealDescriptionDialog';
+import { EncouragementBubble } from '@/components/EncouragementBubble';
 
 interface Ingredient {
   name: string;
@@ -54,6 +56,10 @@ const MealLogging = () => {
     totalFats: 0,
     mealType: getMealTypeByTime()
   });
+  const [isDescriptionDialogOpen, setIsDescriptionDialogOpen] = useState(false);
+  const [encouragementMessage, setEncouragementMessage] = useState('');
+  const [isEncouragementOpen, setIsEncouragementOpen] = useState(false);
+  const [dynamicEncouragement, setDynamicEncouragement] = useState('Nourish your body with love today');
 
   // Update meal type if passed from navigation
   useEffect(() => {
@@ -65,6 +71,25 @@ const MealLogging = () => {
       }));
     }
   }, [location.state]);
+
+  // Generate dynamic encouragement on load
+  useEffect(() => {
+    const generateDailyEncouragement = async () => {
+      try {
+        const response = await supabase.functions.invoke('meal-encouragement', {
+          body: { type: 'daily-encouragement' }
+        });
+        
+        if (response.data?.encouragement) {
+          setDynamicEncouragement(response.data.encouragement);
+        }
+      } catch (error) {
+        console.error('Error generating encouragement:', error);
+      }
+    };
+
+    generateDailyEncouragement();
+  }, []);
 
   function getMealTypeByTime(): string {
     const hour = new Date().getHours();
@@ -89,8 +114,7 @@ const MealLogging = () => {
 
   const handleAddByDescription = () => {
     setIsAddMealOpen(false);
-    // TODO: Implement description-based meal logging
-    console.log('Add by description - to be implemented');
+    setIsDescriptionDialogOpen(true);
   };
 
   const handleAddByPhoto = () => {
@@ -201,7 +225,7 @@ const MealLogging = () => {
         description: "Your meal has been logged successfully. You're doing great!",
       });
 
-      // Generate GPT encouragement (placeholder for now)
+      // Generate GPT encouragement
       generateEncouragement();
 
       // Reset form
@@ -226,24 +250,37 @@ const MealLogging = () => {
     }
   };
 
-  const generateEncouragement = () => {
-    // Placeholder for GPT integration
-    const encouragements = [
-      "Your body is grateful for the nourishment you've provided! The nutrients from this meal will help repair tissues and boost your energy.",
-      "Well done! The protein you've consumed will help build and maintain your muscles, while the carbs will fuel your brain.",
-      "This is fantastic progress! Each meal is a step forward in your recovery journey. Your body is learning to trust you again.",
-      "You're doing an amazing job! The variety of nutrients in this meal will support your metabolism and overall health."
-    ];
-
-    const randomEncouragement = encouragements[Math.floor(Math.random() * encouragements.length)];
-    
-    setTimeout(() => {
-      toast({
-        title: "You're doing amazing! 💚",
-        description: randomEncouragement,
-        duration: 6000
+  const generateEncouragement = async (mealData?: any) => {
+    try {
+      const response = await supabase.functions.invoke('meal-encouragement', {
+        body: { 
+          type: 'meal-celebration',
+          mealData: mealData || currentMeal
+        }
       });
-    }, 1000);
+      
+      if (response.data?.encouragement) {
+        setTimeout(() => {
+          setEncouragementMessage(response.data.encouragement);
+          setIsEncouragementOpen(true);
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error generating encouragement:', error);
+      // Fallback to toast
+      const fallbackMessage = "You're doing an amazing job! Each meal is a step forward in your recovery journey.";
+      setTimeout(() => {
+        toast({
+          title: "You're doing amazing! 💚",
+          description: fallbackMessage,
+          duration: 6000
+        });
+      }, 1000);
+    }
+  };
+
+  const handleMealLogged = (mealData: any) => {
+    generateEncouragement(mealData);
   };
 
   // If showing ingredient form, render the ingredient logging interface
@@ -402,30 +439,34 @@ const MealLogging = () => {
   // Main home page interface
   return (
     <div className="p-6 max-w-lg mx-auto">
-      {/* Minimal Header */}
-      <div className="mb-12">
-        <h1 className="text-lg font-medium text-foreground mb-1">ReframED</h1>
-        <p className="text-muted-foreground text-sm">Track your progress</p>
+      {/* Bubbly Header */}
+      <div className="mb-12 text-center">
+        <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-3">ReframED</h1>
+        <div className="bg-gradient-healing rounded-xl p-4 shadow-gentle">
+          <p className="text-sm text-foreground font-medium">
+            {dynamicEncouragement}
+          </p>
+        </div>
       </div>
 
       {/* Main Action */}
       <div className="space-y-8">
         <Button
           onClick={handleAddMeal}
-          className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-base font-medium transition-fast"
+          className="w-full h-16 bg-gradient-primary hover:scale-105 text-primary-foreground rounded-2xl text-lg font-semibold shadow-gentle transition-all duration-300 transform"
         >
-          Add Meal
+          ✨ Add Meal
         </Button>
 
-        {/* Meal Type Pills */}
-        <div className="flex flex-wrap gap-2">
+        {/* Bubbly Meal Type Pills */}
+        <div className="flex flex-wrap gap-2 justify-center">
           {mealTypes.map((type) => (
             <button
               key={type}
-              className={`px-3 py-1.5 rounded-full text-sm transition-fast ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105 ${
                 selectedMealType === type 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'bg-muted text-muted-foreground hover:bg-border'
+                  ? 'bg-gradient-primary text-primary-foreground shadow-gentle' 
+                  : 'bg-card text-card-foreground hover:bg-accent border border-border/50'
               }`}
               onClick={() => setSelectedMealType(type)}
             >
@@ -435,15 +476,15 @@ const MealLogging = () => {
         </div>
       </div>
 
-      {/* Simple Stats */}
+      {/* Bubbly Stats */}
       <div className="grid grid-cols-2 gap-4 mt-12">
-        <div className="text-center p-4">
-          <div className="text-xl font-semibold text-foreground">3</div>
-          <p className="text-xs text-muted-foreground">Meals</p>
+        <div className="text-center p-6 bg-gradient-healing rounded-xl shadow-gentle border border-primary/10">
+          <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">3</div>
+          <p className="text-xs text-muted-foreground mt-1">Meals Today</p>
         </div>
-        <div className="text-center p-4">
-          <div className="text-xl font-semibold text-foreground">7</div>
-          <p className="text-xs text-muted-foreground">Days</p>
+        <div className="text-center p-6 bg-gradient-healing rounded-xl shadow-gentle border border-primary/10">
+          <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">7</div>
+          <p className="text-xs text-muted-foreground mt-1">Days Strong</p>
         </div>
       </div>
 
@@ -456,6 +497,22 @@ const MealLogging = () => {
         onAddByDescription={handleAddByDescription}
         onAddByIngredient={handleAddByIngredient}
         onAddByPhoto={handleAddByPhoto}
+      />
+
+      {/* Meal Description Dialog */}
+      <MealDescriptionDialog
+        isOpen={isDescriptionDialogOpen}
+        onClose={() => setIsDescriptionDialogOpen(false)}
+        selectedMealType={selectedMealType}
+        userId={user?.id || ''}
+        onMealLogged={handleMealLogged}
+      />
+
+      {/* Encouragement Bubble */}
+      <EncouragementBubble
+        isOpen={isEncouragementOpen}
+        onClose={() => setIsEncouragementOpen(false)}
+        message={encouragementMessage}
       />
     </div>
   );
