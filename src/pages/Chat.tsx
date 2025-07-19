@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,6 @@ import { MessageCircle, Send, Heart, Brain, Lightbulb } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
 interface Message {
   id: number;
   message_user: string | null;
@@ -16,78 +14,74 @@ interface Message {
   timestamp: string;
   context: string | null;
 }
-
 const Chat = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const {
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [therapyMode, setTherapyMode] = useState<'ACT' | 'CBT' | 'DBT'>('ACT');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     fetchChatHistory();
   }, [user]);
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
   };
-
   const fetchChatHistory = async () => {
     if (!user) return;
-
     try {
-      const { data, error } = await supabase
-        .from('ChatbotLogs')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('timestamp', { ascending: true })
-        .limit(50);
-
+      const {
+        data,
+        error
+      } = await supabase.from('ChatbotLogs').select('*').eq('user_id', user.id).order('timestamp', {
+        ascending: true
+      }).limit(50);
       if (error) throw error;
       setMessages(data || []);
     } catch (error) {
       console.error('Error fetching chat history:', error);
     }
   };
-
   const sendMessage = async () => {
     if (!currentMessage.trim() || !user) return;
-
     setIsLoading(true);
-    
     try {
       console.log(`Sending message with ${therapyMode} mode`);
-      
+
       // Call the AI chat function
-      const { data, error } = await supabase.functions.invoke('chat-ai', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('chat-ai', {
         body: {
           message: currentMessage,
           therapyMode: therapyMode,
           userId: user.id
         }
       });
-
       if (error) throw error;
-
       const botResponse = data.response;
 
       // Save to database
-      const { error: dbError } = await supabase
-        .from('ChatbotLogs')
-        .insert({
-          user_id: user.id,
-          timestamp: new Date().toISOString(),
-          message_user: currentMessage,
-          message_bot: botResponse,
-          context: therapyMode.toLowerCase()
-        });
-
+      const {
+        error: dbError
+      } = await supabase.from('ChatbotLogs').insert({
+        user_id: user.id,
+        timestamp: new Date().toISOString(),
+        message_user: currentMessage,
+        message_bot: botResponse,
+        context: therapyMode.toLowerCase()
+      });
       if (dbError) throw dbError;
 
       // Update local state
@@ -98,12 +92,9 @@ const Chat = () => {
         timestamp: new Date().toISOString(),
         context: therapyMode.toLowerCase()
       };
-
       setMessages(prev => [...prev, newMessage]);
       setCurrentMessage('');
-
       console.log('Message sent and saved successfully');
-
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -112,31 +103,25 @@ const Chat = () => {
         variant: "destructive"
       });
     }
-
     setIsLoading(false);
   };
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   };
-
   const therapyModeIcons = {
     ACT: Heart,
     CBT: Brain,
     DBT: Lightbulb
   };
-
   const therapyModeDescriptions = {
     ACT: "Acceptance & Commitment Therapy - Focus on values and mindful acceptance",
     CBT: "Cognitive Behavioral Therapy - Examine thoughts and change patterns",
     DBT: "Dialectical Behavior Therapy - Emotional regulation and distress tolerance"
   };
-
-  return (
-    <div className="flex flex-col h-screen bg-gradient-calm">
+  return <div className="flex flex-col h-screen bg-gradient-calm">
       {/* Header */}
       <div className="p-4 bg-card/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto">
@@ -147,21 +132,13 @@ const Chat = () => {
           
           {/* Therapy Mode Selector */}
           <div className="flex gap-2">
-            {(['ACT', 'CBT', 'DBT'] as const).map((mode) => {
-              const Icon = therapyModeIcons[mode];
-              return (
-                <Button
-                  key={mode}
-                  variant={therapyMode === mode ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setTherapyMode(mode)}
-                  className="flex items-center gap-2"
-                >
+            {(['ACT', 'CBT', 'DBT'] as const).map(mode => {
+            const Icon = therapyModeIcons[mode];
+            return <Button key={mode} variant={therapyMode === mode ? 'default' : 'outline'} size="sm" onClick={() => setTherapyMode(mode)} className="flex items-center gap-2">
                   <Icon className="w-4 h-4" />
                   {mode}
-                </Button>
-              );
-            })}
+                </Button>;
+          })}
           </div>
           <p className="text-xs text-muted-foreground mt-2">
             {therapyModeDescriptions[therapyMode]}
@@ -172,38 +149,20 @@ const Chat = () => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-2xl mx-auto space-y-4">
-          {messages.length === 0 ? (
-            <Card className="shadow-gentle">
-              <CardContent className="pt-6 text-center py-8">
-                <Heart className="w-12 h-12 text-primary mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Welcome to your safe space</h3>
-                <p className="text-muted-foreground mb-4">
-                  I'm here to provide support using {therapyMode} approaches. 
-                  You can talk to me about anything - your feelings, challenges, or victories.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Remember: This is supplemental support. Please reach out to a healthcare 
-                  professional if you're experiencing a crisis.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            messages.map((message) => (
-              <div key={message.id} className="space-y-3">
+          {messages.length === 0 ? <Card className="shadow-gentle">
+              
+            </Card> : messages.map(message => <div key={message.id} className="space-y-3">
                 {/* User Message */}
-                {message.message_user && (
-                  <div className="flex justify-end">
+                {message.message_user && <div className="flex justify-end">
                     <Card className="max-w-[80%] bg-primary text-primary-foreground">
                       <CardContent className="p-3">
                         <p className="text-sm">{message.message_user}</p>
                       </CardContent>
                     </Card>
-                  </div>
-                )}
+                  </div>}
                 
                 {/* Bot Message */}
-                {message.message_bot && (
-                  <div className="flex justify-start">
+                {message.message_bot && <div className="flex justify-start">
                     <Card className="max-w-[80%] shadow-gentle">
                       <CardContent className="p-3">
                         <div className="flex items-start gap-2">
@@ -212,15 +171,11 @@ const Chat = () => {
                         </div>
                       </CardContent>
                     </Card>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
+                  </div>}
+              </div>)}
           
           {/* Loading indicator */}
-          {isLoading && (
-            <div className="flex justify-start">
+          {isLoading && <div className="flex justify-start">
               <Card className="max-w-[80%] shadow-gentle">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-2">
@@ -233,8 +188,7 @@ const Chat = () => {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          )}
+            </div>}
           
           <div ref={messagesEndRef} />
         </div>
@@ -244,26 +198,13 @@ const Chat = () => {
       <div className="p-4 bg-card/95 backdrop-blur-sm border-t border-border">
         <div className="max-w-2xl mx-auto">
           <div className="flex gap-2">
-            <Input
-              placeholder="Share what's on your mind..."
-              value={currentMessage}
-              onChange={(e) => setCurrentMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              disabled={isLoading}
-              className="flex-1"
-            />
-            <Button 
-              onClick={sendMessage} 
-              disabled={!currentMessage.trim() || isLoading}
-              size="icon"
-            >
+            <Input placeholder="Share what's on your mind..." value={currentMessage} onChange={e => setCurrentMessage(e.target.value)} onKeyPress={handleKeyPress} disabled={isLoading} className="flex-1" />
+            <Button onClick={sendMessage} disabled={!currentMessage.trim() || isLoading} size="icon">
               <Send className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Chat;
