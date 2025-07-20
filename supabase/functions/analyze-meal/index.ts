@@ -49,6 +49,11 @@ Base your estimates on typical serving sizes. Be realistic but not overly precis
     });
 
     const data = await response.json();
+    
+    if (!response.ok || !data.choices || !data.choices[0]) {
+      throw new Error(`OpenAI API error: ${response.status} - ${data.error?.message || 'Unknown error'}`);
+    }
+    
     const content = data.choices[0].message.content;
     
     // Parse the JSON response

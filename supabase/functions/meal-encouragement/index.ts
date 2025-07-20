@@ -45,6 +45,11 @@ serve(async (req) => {
     });
 
     const data = await response.json();
+    
+    if (!response.ok || !data.choices || !data.choices[0]) {
+      throw new Error(`OpenAI API error: ${response.status} - ${data.error?.message || 'Unknown error'}`);
+    }
+    
     const encouragement = data.choices[0].message.content;
 
     return new Response(JSON.stringify({ encouragement }), {

@@ -47,11 +47,12 @@ serve(async (req) => {
       }),
     });
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+    const data = await response.json();
+    
+    if (!response.ok || !data.choices || !data.choices[0]) {
+      throw new Error(`OpenAI API error: ${response.status} - ${data.error?.message || 'Unknown error'}`);
     }
 
-    const data = await response.json();
     const botResponse = data.choices[0].message.content;
 
     console.log('Successfully generated AI response');
