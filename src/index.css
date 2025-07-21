@@ -2,126 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Bubbly, Welcoming Design System - Warm, encouraging, healing
+/* Tech-Forward Orange & Gray Design System - Light, bubbly, modern
 All colors MUST be HSL for proper theming.
 */
 
 @layer base {
   :root {
-    /* Warm, welcoming backgrounds */
-    --background: 220 13% 18%;
-    --foreground: 220 30% 92%;
+    /* Clean light backgrounds */
+    --background: 0 0% 100%;
+    --foreground: 220 9% 15%;
 
-    /* Friendly card surfaces */
-    --card: 220 13% 20%;
-    --card-foreground: 220 20% 85%;
+    /* Clean card surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 220 9% 15%;
 
-    --popover: 220 13% 18%;
-    --popover-foreground: 220 20% 85%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 9% 15%;
 
-    /* Magical purple primary */
-    --primary: 280 100% 70%;
-    --primary-foreground: 220 13% 18%;
+    /* Vibrant orange primary */
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Soft secondary */
-    --secondary: 220 13% 25%;
-    --secondary-foreground: 220 20% 85%;
+    /* Light gray secondary */
+    --secondary: 220 9% 96%;
+    --secondary-foreground: 220 9% 15%;
 
     /* Gentle muted tones */
-    --muted: 220 13% 25%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 220 9% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    /* Warm accent */
-    --accent: 220 13% 25%;
-    --accent-foreground: 220 20% 85%;
+    /* Orange accent */
+    --accent: 25 95% 95%;
+    --accent-foreground: 25 95% 53%;
 
-    /* Gentle destructive */
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
+    /* Red destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Soft borders */
-    --border: 220 13% 28%;
-    --input: 220 13% 28%;
-    --ring: 280 100% 70%;
+    /* Light borders */
+    --border: 220 9% 89%;
+    --input: 220 9% 89%;
+    --ring: 25 95% 53%;
 
-    --radius: 12px;
+    --radius: 16px;
 
-    /* App-specific healing tokens */
+    /* App-specific tokens */
     --success: 142 76% 36%;
-    --success-foreground: 220 13% 18%;
+    --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 220 13% 18%;
-    --info: 221 83% 53%;
-    --info-foreground: 220 13% 18%;
+    --warning-foreground: 0 0% 100%;
+    --info: 25 95% 53%;
+    --info-foreground: 0 0% 100%;
 
-    /* Bubbly gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(280 100% 70%), hsl(260 100% 75%));
-    --gradient-subtle: linear-gradient(180deg, hsl(220 13% 22%), hsl(220 13% 18%));
-    --gradient-healing: linear-gradient(135deg, hsl(280 100% 70% / 0.1), hsl(260 100% 75% / 0.1));
+    /* Tech gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 95% 63%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 9% 98%));
+    --gradient-healing: linear-gradient(135deg, hsl(25 95% 53% / 0.05), hsl(25 95% 63% / 0.05));
 
-    /* Welcoming shadows */
-    --shadow-gentle: 0 4px 20px hsl(280 100% 70% / 0.15);
-    --shadow-glow: 0 0 40px hsl(280 100% 70% / 0.25);
-    --shadow-focus: 0 0 0 2px hsl(280 100% 70% / 0.3);
+    /* Modern shadows */
+    --shadow-gentle: 0 4px 20px hsl(25 95% 53% / 0.1);
+    --shadow-glow: 0 0 40px hsl(25 95% 53% / 0.15);
+    --shadow-focus: 0 0 0 2px hsl(25 95% 53% / 0.2);
 
     /* Smooth animations */
     --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --sidebar-background: 120 30% 96%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 9% 15%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 9% 96%;
+    --sidebar-accent-foreground: 220 9% 15%;
+    --sidebar-border: 220 9% 89%;
+    --sidebar-ring: 25 95% 53%;
   }
 
   .dark {
-    /* Keep the same bubbly theme for dark mode */
-    --background: 220 13% 18%;
-    --foreground: 220 30% 92%;
+    /* Dark mode with orange & gray theme */
+    --background: 220 9% 9%;
+    --foreground: 220 9% 95%;
 
-    --card: 220 13% 20%;
-    --card-foreground: 220 20% 85%;
+    --card: 220 9% 12%;
+    --card-foreground: 220 9% 90%;
 
-    --popover: 220 13% 18%;
-    --popover-foreground: 220 20% 85%;
+    --popover: 220 9% 9%;
+    --popover-foreground: 220 9% 90%;
 
-    --primary: 280 100% 70%;
-    --primary-foreground: 220 13% 18%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 13% 25%;
-    --secondary-foreground: 220 20% 85%;
+    --secondary: 220 9% 15%;
+    --secondary-foreground: 220 9% 85%;
 
-    --muted: 220 13% 25%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 220 9% 15%;
+    --muted-foreground: 220 9% 65%;
 
-    --accent: 220 13% 25%;
-    --accent-foreground: 220 20% 85%;
+    --accent: 220 9% 15%;
+    --accent-foreground: 25 95% 53%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 28%;
-    --input: 220 13% 28%;
-    --ring: 280 100% 70%;
-    --sidebar-background: 220 13% 20%;
-    --sidebar-foreground: 220 20% 85%;
-    --sidebar-primary: 280 100% 70%;
-    --sidebar-primary-foreground: 220 13% 18%;
-    --sidebar-accent: 220 13% 25%;
-    --sidebar-accent-foreground: 220 20% 85%;
-    --sidebar-border: 220 13% 28%;
-    --sidebar-ring: 280 100% 70%;
+    --border: 220 9% 20%;
+    --input: 220 9% 20%;
+    --ring: 25 95% 53%;
+    --sidebar-background: 220 9% 12%;
+    --sidebar-foreground: 220 9% 90%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 9% 15%;
+    --sidebar-accent-foreground: 220 9% 85%;
+    --sidebar-border: 220 9% 20%;
+    --sidebar-ring: 25 95% 53%;
   }
 }
 
