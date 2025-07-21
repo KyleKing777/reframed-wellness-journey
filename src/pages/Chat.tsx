@@ -69,8 +69,17 @@ const Chat = () => {
           userId: user.id
         }
       });
-      if (error) throw error;
-      const botResponse = data.response;
+      console.log("Function data:", data);
+console.log("Function error:", error);
+
+if (error) {
+  throw error;
+}
+if (!data || !data.response) {
+  throw new Error("No response returned from chat function");
+}
+
+const botResponse = data.response;
 
       // Save to database
       const {
