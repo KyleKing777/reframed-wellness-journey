@@ -33,7 +33,7 @@ serve(async (req) => {
         "X-Title": "ReframED Chatbot"                                     // optional, for attribution
       },
       body: JSON.stringify({
-        model: "openchat/openchat-7b", // You can swap in another model here
+        model: "mistralai/mistral-7b-instruct", // You can swap in another model here
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message }
