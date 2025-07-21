@@ -11,7 +11,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AddMealDialog } from '@/components/meal/AddMealDialog';
 import { MealDescriptionDialog } from '@/components/meal/MealDescriptionDialog';
 import { EncouragementBubble } from '@/components/EncouragementBubble';
-
 interface Ingredient {
   name: string;
   quantity: string;
@@ -20,7 +19,6 @@ interface Ingredient {
   carbs: number;
   fats: number;
 }
-
 interface MealState {
   ingredients: Ingredient[];
   totalCalories: number;
@@ -29,19 +27,14 @@ interface MealState {
   totalFats: number;
   mealType: string;
 }
-
-const mealTypes = [
-  'Breakfast',
-  'Lunch', 
-  'Dinner',
-  'Morning Snack',
-  'Afternoon Snack',
-  'Late Night Snack'
-];
-
+const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Morning Snack', 'Afternoon Snack', 'Late Night Snack'];
 const MealLogging = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const {
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIngredients, setSelectedIngredients] = useState<Ingredient[]>([]);
@@ -77,9 +70,10 @@ const MealLogging = () => {
     const generateDailyEncouragement = async () => {
       try {
         const response = await supabase.functions.invoke('meal-encouragement', {
-          body: { type: 'daily-encouragement' }
+          body: {
+            type: 'daily-encouragement'
+          }
         });
-        
         if (response.data?.encouragement) {
           setDynamicEncouragement(response.data.encouragement);
         }
@@ -87,36 +81,28 @@ const MealLogging = () => {
         console.error('Error generating encouragement:', error);
       }
     };
-
     generateDailyEncouragement();
   }, []);
-
   function getMealTypeByTime(): string {
     const hour = new Date().getHours();
-    
     if (hour >= 4 && hour < 11) return 'Breakfast';
     if (hour >= 11 && hour < 15) return 'Lunch';
     if (hour >= 15 && hour < 18) return 'Afternoon Snack';
     if (hour >= 18 || hour < 4) return 'Dinner';
-    
     return 'Morning Snack';
   }
-
   const handleAddMeal = () => {
     setSelectedMealType(getMealTypeByTime());
     setIsAddMealOpen(true);
   };
-
   const handleAddByIngredient = () => {
     setIsAddMealOpen(false);
     setShowIngredientForm(true);
   };
-
   const handleAddByDescription = () => {
     setIsAddMealOpen(false);
     setIsDescriptionDialogOpen(true);
   };
-
   const handleAddByPhoto = () => {
     setIsAddMealOpen(false);
     // TODO: Implement photo-based meal logging
@@ -125,49 +111,102 @@ const MealLogging = () => {
 
   // Sample nutrition data - in a real app, this would come from an external API
   const sampleNutritionData: Record<string, Omit<Ingredient, 'quantity'>> = {
-    'banana': { name: 'Banana', calories: 105, protein: 1.3, carbs: 27, fats: 0.4 },
-    'apple': { name: 'Apple', calories: 95, protein: 0.5, carbs: 25, fats: 0.3 },
-    'oatmeal': { name: 'Oatmeal (1 cup)', calories: 147, protein: 5.3, carbs: 25, fats: 2.8 },
-    'chicken breast': { name: 'Chicken Breast (100g)', calories: 231, protein: 43.5, carbs: 0, fats: 5 },
-    'brown rice': { name: 'Brown Rice (1 cup)', calories: 216, protein: 5, carbs: 45, fats: 1.8 },
-    'avocado': { name: 'Avocado (half)', calories: 234, protein: 2.9, carbs: 12, fats: 21.4 },
-    'Greek yogurt': { name: 'Greek Yogurt (1 cup)', calories: 130, protein: 23, carbs: 9, fats: 0 },
-    'almonds': { name: 'Almonds (28g)', calories: 164, protein: 6, carbs: 6, fats: 14 },
-    'broccoli': { name: 'Broccoli (1 cup)', calories: 55, protein: 4, carbs: 11, fats: 0.6 },
-    'sweet potato': { name: 'Sweet Potato (medium)', calories: 112, protein: 2, carbs: 26, fats: 0.1 }
+    'banana': {
+      name: 'Banana',
+      calories: 105,
+      protein: 1.3,
+      carbs: 27,
+      fats: 0.4
+    },
+    'apple': {
+      name: 'Apple',
+      calories: 95,
+      protein: 0.5,
+      carbs: 25,
+      fats: 0.3
+    },
+    'oatmeal': {
+      name: 'Oatmeal (1 cup)',
+      calories: 147,
+      protein: 5.3,
+      carbs: 25,
+      fats: 2.8
+    },
+    'chicken breast': {
+      name: 'Chicken Breast (100g)',
+      calories: 231,
+      protein: 43.5,
+      carbs: 0,
+      fats: 5
+    },
+    'brown rice': {
+      name: 'Brown Rice (1 cup)',
+      calories: 216,
+      protein: 5,
+      carbs: 45,
+      fats: 1.8
+    },
+    'avocado': {
+      name: 'Avocado (half)',
+      calories: 234,
+      protein: 2.9,
+      carbs: 12,
+      fats: 21.4
+    },
+    'Greek yogurt': {
+      name: 'Greek Yogurt (1 cup)',
+      calories: 130,
+      protein: 23,
+      carbs: 9,
+      fats: 0
+    },
+    'almonds': {
+      name: 'Almonds (28g)',
+      calories: 164,
+      protein: 6,
+      carbs: 6,
+      fats: 14
+    },
+    'broccoli': {
+      name: 'Broccoli (1 cup)',
+      calories: 55,
+      protein: 4,
+      carbs: 11,
+      fats: 0.6
+    },
+    'sweet potato': {
+      name: 'Sweet Potato (medium)',
+      calories: 112,
+      protein: 2,
+      carbs: 26,
+      fats: 0.1
+    }
   };
-
-  const filteredIngredients = Object.keys(sampleNutritionData).filter(key =>
-    key.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+  const filteredIngredients = Object.keys(sampleNutritionData).filter(key => key.toLowerCase().includes(searchTerm.toLowerCase()));
   const addIngredient = (ingredientKey: string) => {
     const ingredient = sampleNutritionData[ingredientKey];
     if (!ingredient) return;
-
     const quantity = prompt(`How much ${ingredient.name}?`, '1 serving') || '1 serving';
-    
     const newIngredient: Ingredient = {
       ...ingredient,
       quantity
     };
-
     setSelectedIngredients(prev => [...prev, newIngredient]);
     updateMealTotals([...selectedIngredients, newIngredient]);
     setSearchTerm('');
   };
-
   const updateMealTotals = (ingredients: Ingredient[]) => {
-    const totals = ingredients.reduce(
-      (acc, ingredient) => ({
-        totalCalories: acc.totalCalories + ingredient.calories,
-        totalProtein: acc.totalProtein + ingredient.protein,
-        totalCarbs: acc.totalCarbs + ingredient.carbs,
-        totalFats: acc.totalFats + ingredient.fats,
-      }),
-      { totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFats: 0 }
-    );
-
+    const totals = ingredients.reduce((acc, ingredient) => ({
+      totalCalories: acc.totalCalories + ingredient.calories,
+      totalProtein: acc.totalProtein + ingredient.protein,
+      totalCarbs: acc.totalCarbs + ingredient.carbs,
+      totalFats: acc.totalFats + ingredient.fats
+    }), {
+      totalCalories: 0,
+      totalProtein: 0,
+      totalCarbs: 0,
+      totalFats: 0
+    });
     setCurrentMeal(prev => ({
       ...prev,
       ingredients,
@@ -175,7 +214,6 @@ const MealLogging = () => {
       ...totals
     }));
   };
-
   const completeMeal = async () => {
     if (selectedIngredients.length === 0) {
       toast({
@@ -185,44 +223,38 @@ const MealLogging = () => {
       });
       return;
     }
-
     try {
       // Save meal to database
-      const { data: mealData, error: mealError } = await supabase
-        .from('Meals')
-        .insert({
-          user_id: user?.id,
-          date: new Date().toISOString().split('T')[0],
-          meal_type: currentMeal.mealType,
-          total_calories: currentMeal.totalCalories,
-          total_protein: currentMeal.totalProtein,
-          total_carbs: currentMeal.totalCarbs,
-          total_fat: currentMeal.totalFats
-        })
-        .select()
-        .single();
-
+      const {
+        data: mealData,
+        error: mealError
+      } = await supabase.from('Meals').insert({
+        user_id: user?.id,
+        date: new Date().toISOString().split('T')[0],
+        meal_type: currentMeal.mealType,
+        total_calories: currentMeal.totalCalories,
+        total_protein: currentMeal.totalProtein,
+        total_carbs: currentMeal.totalCarbs,
+        total_fat: currentMeal.totalFats
+      }).select().single();
       if (mealError) throw mealError;
 
       // Save ingredients
-      const ingredientPromises = selectedIngredients.map(ingredient =>
-        supabase.from('MealIngredients').insert({
-          meal_id: mealData.id.toString(),
-          name: ingredient.name,
-          quantity: ingredient.quantity,
-          calories: ingredient.calories,
-          protein: ingredient.protein,
-          carbs: ingredient.carbs,
-          fats: ingredient.fats
-        })
-      );
-
+      const ingredientPromises = selectedIngredients.map(ingredient => supabase.from('MealIngredients').insert({
+        meal_id: mealData.id.toString(),
+        name: ingredient.name,
+        quantity: ingredient.quantity,
+        calories: ingredient.calories,
+        protein: ingredient.protein,
+        carbs: ingredient.carbs,
+        fats: ingredient.fats
+      }));
       await Promise.all(ingredientPromises);
 
       // Show success message
       toast({
         title: "Perfect! 🎉",
-        description: "Your meal has been logged successfully. You're doing great!",
+        description: "Your meal has been logged successfully. You're doing great!"
       });
 
       // Generate GPT encouragement
@@ -239,7 +271,6 @@ const MealLogging = () => {
         mealType: getMealTypeByTime()
       });
       setShowIngredientForm(false);
-
     } catch (error) {
       console.error('Error saving meal:', error);
       toast({
@@ -249,16 +280,14 @@ const MealLogging = () => {
       });
     }
   };
-
   const generateEncouragement = async (mealData?: any) => {
     try {
       const response = await supabase.functions.invoke('meal-encouragement', {
-        body: { 
+        body: {
           type: 'meal-celebration',
           mealData: mealData || currentMeal
         }
       });
-      
       if (response.data?.encouragement) {
         setTimeout(() => {
           setEncouragementMessage(response.data.encouragement);
@@ -278,15 +307,13 @@ const MealLogging = () => {
       }, 1000);
     }
   };
-
   const handleMealLogged = (mealData: any) => {
     generateEncouragement(mealData);
   };
 
   // If showing ingredient form, render the ingredient logging interface
   if (showIngredientForm) {
-    return (
-      <div className="p-4 space-y-6 max-w-2xl mx-auto">
+    return <div className="p-4 space-y-6 max-w-2xl mx-auto">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Log Your Meal</h1>
           <p className="text-muted-foreground">Every bite is a step forward in your journey</p>
@@ -296,19 +323,15 @@ const MealLogging = () => {
         <Card className="shadow-gentle">
           <CardContent className="pt-6">
             <div className="flex gap-2 mb-4">
-              {mealTypes.map((type) => (
-                <Button
-                  key={type}
-                  variant={selectedMealType === type ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    setSelectedMealType(type);
-                    setCurrentMeal(prev => ({ ...prev, mealType: type }));
-                  }}
-                >
+              {mealTypes.map(type => <Button key={type} variant={selectedMealType === type ? 'default' : 'outline'} size="sm" onClick={() => {
+              setSelectedMealType(type);
+              setCurrentMeal(prev => ({
+                ...prev,
+                mealType: type
+              }));
+            }}>
                   {type}
-                </Button>
-              ))}
+                </Button>)}
             </div>
           </CardContent>
         </Card>
@@ -318,25 +341,14 @@ const MealLogging = () => {
           <CardContent className="pt-6">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search for ingredients..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+              <Input placeholder="Search for ingredients..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
 
             {/* Search Results */}
-            {searchTerm && (
-              <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
-                {filteredIngredients.map((key) => {
-                  const ingredient = sampleNutritionData[key];
-                  return (
-                    <div
-                      key={key}
-                      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
-                      onClick={() => addIngredient(key)}
-                    >
+            {searchTerm && <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
+                {filteredIngredients.map(key => {
+              const ingredient = sampleNutritionData[key];
+              return <div key={key} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors" onClick={() => addIngredient(key)}>
                       <div>
                         <p className="font-medium">{ingredient.name}</p>
                         <p className="text-sm text-muted-foreground">
@@ -344,23 +356,19 @@ const MealLogging = () => {
                         </p>
                       </div>
                       <Plus className="w-5 h-5 text-primary" />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    </div>;
+            })}
+              </div>}
           </CardContent>
         </Card>
 
         {/* Selected Ingredients */}
-        {selectedIngredients.length > 0 && (
-          <Card className="shadow-gentle">
+        {selectedIngredients.length > 0 && <Card className="shadow-gentle">
             <CardHeader>
               <CardTitle>Your {selectedMealType}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {selectedIngredients.map((ingredient, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-accent/30 rounded-lg">
+              {selectedIngredients.map((ingredient, index) => <div key={index} className="flex items-center justify-between p-3 bg-accent/30 rounded-lg">
                   <div>
                     <p className="font-medium">{ingredient.name}</p>
                     <p className="text-sm text-muted-foreground">{ingredient.quantity}</p>
@@ -373,8 +381,7 @@ const MealLogging = () => {
                       <span>F: {ingredient.fats}g</span>
                     </div>
                   </div>
-                </div>
-              ))}
+                </div>)}
 
               {/* Meal Totals */}
               <div className="pt-4 border-t border-border">
@@ -391,36 +398,24 @@ const MealLogging = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => {
-                    setSelectedIngredients([]);
-                    updateMealTotals([]);
-                  }}
-                >
+                <Button variant="outline" className="flex-1" onClick={() => {
+              setSelectedIngredients([]);
+              updateMealTotals([]);
+            }}>
                   Clear All
                 </Button>
-                <Button 
-                  onClick={completeMeal}
-                  className="flex-1 bg-success hover:bg-success/90 text-success-foreground"
-                >
+                <Button onClick={completeMeal} className="flex-1 bg-success hover:bg-success/90 text-success-foreground">
                   <Heart className="w-4 h-4 mr-2" />
                   Perfect!
                 </Button>
               </div>
 
               {/* Back Button */}
-              <Button 
-                variant="ghost" 
-                className="w-full mt-4"
-                onClick={() => setShowIngredientForm(false)}
-              >
+              <Button variant="ghost" className="w-full mt-4" onClick={() => setShowIngredientForm(false)}>
                 Back to Home
               </Button>
             </CardContent>
-          </Card>
-        )}
+          </Card>}
 
         {/* Encouraging Message */}
         <Card className="bg-gradient-healing border-primary/20 shadow-gentle">
@@ -432,47 +427,28 @@ const MealLogging = () => {
             </p>
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>;
   }
 
   // Main home page interface
-  return (
-    <div className="p-6 max-w-lg mx-auto">
+  return <div className="p-6 max-w-lg mx-auto">
       {/* Bubbly Header */}
       <div className="mb-12 text-center">
         <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-3">ReframED</h1>
-        <div className="bg-gradient-healing rounded-xl p-4 shadow-gentle">
-          <p className="text-sm text-foreground font-medium">
-            {dynamicEncouragement}
-          </p>
-        </div>
+        
       </div>
 
       {/* Main Action */}
       <div className="space-y-8">
-        <Button
-          onClick={handleAddMeal}
-          className="w-full h-16 bg-gradient-primary hover:scale-105 text-primary-foreground rounded-2xl text-lg font-semibold shadow-gentle transition-all duration-300 transform"
-        >
+        <Button onClick={handleAddMeal} className="w-full h-16 bg-gradient-primary hover:scale-105 text-primary-foreground rounded-2xl text-lg font-semibold shadow-gentle transition-all duration-300 transform">
           ✨ Add Meal
         </Button>
 
         {/* Bubbly Meal Type Pills */}
         <div className="flex flex-wrap gap-2 justify-center">
-          {mealTypes.map((type) => (
-            <button
-              key={type}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105 ${
-                selectedMealType === type 
-                  ? 'bg-gradient-primary text-primary-foreground shadow-gentle' 
-                  : 'bg-card text-card-foreground hover:bg-accent border border-border/50'
-              }`}
-              onClick={() => setSelectedMealType(type)}
-            >
+          {mealTypes.map(type => <button key={type} className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105 ${selectedMealType === type ? 'bg-gradient-primary text-primary-foreground shadow-gentle' : 'bg-card text-card-foreground hover:bg-accent border border-border/50'}`} onClick={() => setSelectedMealType(type)}>
               {type}
-            </button>
-          ))}
+            </button>)}
         </div>
       </div>
 
@@ -489,33 +465,13 @@ const MealLogging = () => {
       </div>
 
       {/* Add Meal Dialog */}
-      <AddMealDialog
-        isOpen={isAddMealOpen}
-        onClose={() => setIsAddMealOpen(false)}
-        selectedMealType={selectedMealType}
-        onMealTypeChange={setSelectedMealType}
-        onAddByDescription={handleAddByDescription}
-        onAddByIngredient={handleAddByIngredient}
-        onAddByPhoto={handleAddByPhoto}
-      />
+      <AddMealDialog isOpen={isAddMealOpen} onClose={() => setIsAddMealOpen(false)} selectedMealType={selectedMealType} onMealTypeChange={setSelectedMealType} onAddByDescription={handleAddByDescription} onAddByIngredient={handleAddByIngredient} onAddByPhoto={handleAddByPhoto} />
 
       {/* Meal Description Dialog */}
-      <MealDescriptionDialog
-        isOpen={isDescriptionDialogOpen}
-        onClose={() => setIsDescriptionDialogOpen(false)}
-        selectedMealType={selectedMealType}
-        userId={user?.id || ''}
-        onMealLogged={handleMealLogged}
-      />
+      <MealDescriptionDialog isOpen={isDescriptionDialogOpen} onClose={() => setIsDescriptionDialogOpen(false)} selectedMealType={selectedMealType} userId={user?.id || ''} onMealLogged={handleMealLogged} />
 
       {/* Encouragement Bubble */}
-      <EncouragementBubble
-        isOpen={isEncouragementOpen}
-        onClose={() => setIsEncouragementOpen(false)}
-        message={encouragementMessage}
-      />
-    </div>
-  );
+      <EncouragementBubble isOpen={isEncouragementOpen} onClose={() => setIsEncouragementOpen(false)} message={encouragementMessage} />
+    </div>;
 };
-
 export default MealLogging;
