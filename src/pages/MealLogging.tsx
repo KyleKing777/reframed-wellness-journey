@@ -434,7 +434,7 @@ const MealLogging = () => {
   return <div className="p-6 max-w-lg mx-auto">
       {/* Bubbly Header */}
       <div className="mb-12 text-center">
-        <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-3">ReframED</h1>
+        <h1 className="font-bold bg-gradient-primary bg-clip-text text-transparent mb-3 text-3xl text-center">ReframED</h1>
         
       </div>
 
