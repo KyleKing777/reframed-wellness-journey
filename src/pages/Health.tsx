@@ -91,7 +91,7 @@ const Health = () => {
       if (error) throw error;
 
       toast({
-        title: "Weight recorded! 📊",
+        title: "Weight recorded!",
         description: "Your progress has been updated.",
       });
 
@@ -186,7 +186,7 @@ const Health = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Progress</p>
                 <p className="text-2xl font-bold">
-                  {trend ? (trend.trend === 'increasing' ? '📈' : trend.trend === 'decreasing' ? '📉' : '➡️') : '📊'}
+                  {trend ? (trend.trend === 'increasing' ? 'Up' : trend.trend === 'decreasing' ? 'Down' : 'Stable') : 'Tracking'}
                 </p>
                 <p className="text-xs text-muted-foreground">Weight trend</p>
               </div>
@@ -295,7 +295,7 @@ const Health = () => {
       <Card className="bg-gradient-healing border-primary/20 shadow-gentle">
         <CardContent className="pt-6 text-center">
           <TrendingUp className="w-8 h-8 text-primary mx-auto mb-3" />
-          <p className="text-foreground font-medium mb-2">You're making progress! 🌱</p>
+          <p className="text-foreground font-medium mb-2">You're making progress!</p>
           <p className="text-sm text-muted-foreground">
             Every data point represents your commitment to recovery. Your consistency is building a healthier relationship with your body.
           </p>

@@ -29,7 +29,7 @@ export const EncouragementBubble = ({ isOpen, onClose, message }: EncouragementB
             </div>
             
             <div className="space-y-3">
-              <h3 className="text-xl font-semibold text-foreground">You're doing amazing! 💫</h3>
+              <h3 className="text-xl font-semibold text-foreground">You're doing amazing!</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {message}
               </p>
@@ -39,7 +39,7 @@ export const EncouragementBubble = ({ isOpen, onClose, message }: EncouragementB
               onClick={onClose}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-6"
             >
-              Thank you ✨
+              Thank you
             </Button>
           </div>
         </div>

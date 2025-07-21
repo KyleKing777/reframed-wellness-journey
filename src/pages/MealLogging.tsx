@@ -253,7 +253,7 @@ const MealLogging = () => {
 
       // Show success message
       toast({
-        title: "Perfect! 🎉",
+        title: "Perfect!",
         description: "Your meal has been logged successfully. You're doing great!"
       });
 
@@ -441,7 +441,7 @@ const MealLogging = () => {
       {/* Main Action */}
       <div className="space-y-8">
         <Button onClick={handleAddMeal} className="w-full h-16 bg-gradient-primary hover:scale-105 text-primary-foreground rounded-2xl text-lg font-semibold shadow-gentle transition-all duration-300 transform">
-          ✨ Add Meal
+          Add Meal
         </Button>
 
         {/* Bubbly Meal Type Pills */}

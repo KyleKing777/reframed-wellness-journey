@@ -94,7 +94,7 @@ export const MealDescriptionDialog = ({
       if (mealError) throw mealError;
 
       toast({
-        title: "Perfect! 🎉",
+        title: "Perfect!",
         description: "Your meal has been logged successfully.",
       });
 

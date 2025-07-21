@@ -86,7 +86,7 @@ const Profile = () => {
       if (error) throw error;
 
       toast({
-        title: "Profile updated! ✨",
+        title: "Profile updated!",
         description: "Your changes have been saved successfully.",
       });
       setIsEditing(false);
