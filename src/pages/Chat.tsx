@@ -52,66 +52,32 @@ const Chat = () => {
       console.error('Error fetching chat history:', error);
     }
   };
-const sendMessage = async () => {
-  if (!currentMessage.trim() || !user) return;
-  setIsLoading(true);
+  const sendMessage = async () => {
+    if (!currentMessage.trim() || !user) return;
+    setIsLoading(true);
+    try {
+      console.log(`Sending message with ${therapyMode} mode`);
 
-  try {
-    console.log(`Sending message with ${therapyMode} mode`);
+      // Call the AI chat function
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('chat-ai', {
+        body: {
+          message: currentMessage,
+          therapyMode: therapyMode,
+          userId: user.id
+        }
+      });
+      console.log("Function data:", data);
+console.log("Function error:", error);
 
-    const response = await fetch('https://lflrqcxqscqqyhojqynv.functions.supabase.co/chat-ai', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}` // ✅ Use your anon key
-      },
-      body: JSON.stringify({
-        message: currentMessage,
-        therapyMode: therapyMode,
-        userId: user.id
-      })
-    });
-
-    const data = await response.json();
-    if (!response.ok || !data.response) {
-      throw new Error("No response returned from chat function");
-    }
-
-    const botResponse = data.response;
-
-    // Save to DB
-    const { error: dbError } = await supabase.from('ChatbotLogs').insert({
-      user_id: user.id,
-      timestamp: new Date().toISOString(),
-      message_user: currentMessage,
-      message_bot: botResponse,
-      context: therapyMode.toLowerCase()
-    });
-
-    if (dbError) throw dbError;
-
-    setMessages(prev => [...prev, {
-      id: Date.now(),
-      message_user: currentMessage,
-      message_bot: botResponse,
-      timestamp: new Date().toISOString(),
-      context: therapyMode.toLowerCase()
-    }]);
-
-    setCurrentMessage('');
-    console.log('Message sent and saved successfully');
-
-  } catch (error) {
-    console.error('Error sending message:', error);
-    toast({
-      title: "Error",
-      description: "There was a problem sending your message. Please try again.",
-      variant: "destructive"
-    });
-  }
-
-  setIsLoading(false);
-};
+if (error) {
+  throw error;
+}
+if (!data || !data.response) {
+  throw new Error("No response returned from chat function");
+}
 
 const botResponse = data.response;
 
