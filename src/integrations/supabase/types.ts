@@ -165,6 +165,7 @@ export type Database = {
           password: string | null
           therapist_description: string | null
           therapy_style: string | null
+          user_id: string | null
           username: string | null
           weekly_weight_gain_goal: number | null
           weight_kg: number | null
@@ -181,6 +182,7 @@ export type Database = {
           password?: string | null
           therapist_description?: string | null
           therapy_style?: string | null
+          user_id?: string | null
           username?: string | null
           weekly_weight_gain_goal?: number | null
           weight_kg?: number | null
@@ -197,6 +199,7 @@ export type Database = {
           password?: string | null
           therapist_description?: string | null
           therapy_style?: string | null
+          user_id?: string | null
           username?: string | null
           weekly_weight_gain_goal?: number | null
           weight_kg?: number | null
