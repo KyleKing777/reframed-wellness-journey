@@ -69,20 +69,25 @@ const MealLogging = () => {
   useEffect(() => {
     const generateDailyEncouragement = async () => {
       try {
-        const response = await supabase.functions.invoke('meal-encouragement', {
+        const response = await supabase.functions.invoke('chat-ai', {
           body: {
-            type: 'daily-encouragement'
+            message: 'Please provide a brief, encouraging message for someone starting their day of mindful eating and recovery. Keep it supportive and aligned with eating disorder recovery principles.',
+            therapyMode: 'ACT', // Default to ACT for daily encouragement
+            userId: user?.id
           }
         });
-        if (response.data?.encouragement) {
-          setDynamicEncouragement(response.data.encouragement);
+        if (response.data?.response) {
+          setDynamicEncouragement(response.data.response);
         }
       } catch (error) {
         console.error('Error generating encouragement:', error);
       }
     };
-    generateDailyEncouragement();
-  }, []);
+    
+    if (user?.id) {
+      generateDailyEncouragement();
+    }
+  }, [user?.id]);
   function getMealTypeByTime(): string {
     const hour = new Date().getHours();
     if (hour >= 4 && hour < 11) return 'Breakfast';
@@ -282,15 +287,27 @@ const MealLogging = () => {
   };
   const generateEncouragement = async (mealData?: any) => {
     try {
-      const response = await supabase.functions.invoke('meal-encouragement', {
+      // Get user's therapy preferences
+      const { data: userProfile } = await supabase
+        .from('Users')
+        .select('therapy_style')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      const therapyMode = userProfile?.therapy_style || 'ACT';
+      const meal = mealData || currentMeal;
+
+      const response = await supabase.functions.invoke('chat-ai', {
         body: {
-          type: 'meal-celebration',
-          mealData: mealData || currentMeal
+          message: `Please provide a supportive, encouraging message celebrating this meal choice. Include the nutritional aspects in a positive way. Meal: ${meal.mealType} with ${meal.totalCalories} calories, ${meal.totalProtein}g protein, ${meal.totalCarbs}g carbs, ${meal.totalFats}g fats. Keep it brief and recovery-focused.`,
+          therapyMode,
+          userId: user?.id
         }
       });
-      if (response.data?.encouragement) {
+      
+      if (response.data?.response) {
         setTimeout(() => {
-          setEncouragementMessage(response.data.encouragement);
+          setEncouragementMessage(response.data.response);
           setIsEncouragementOpen(true);
         }, 1000);
       }
