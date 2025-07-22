@@ -81,6 +81,26 @@ Please structure your response with the JSON first, followed by your supportive 
 
       if (response.error) throw response.error;
 
+      // If edge function is unreachable, provide a fallback analysis
+      if (!response.data?.response) {
+        // Fallback: provide basic estimates and encouragement
+        const fallbackEstimate = {
+          calories: 300, // Conservative estimate
+          protein: 15,
+          carbs: 30,
+          fats: 10
+        };
+        
+        setNutritionEstimate(fallbackEstimate);
+        
+        toast({
+          title: "Meal logged! 💚",
+          description: "We couldn't analyze your meal right now, but we've logged it with basic estimates. Every bite is progress on your recovery journey!",
+          duration: 8000,
+        });
+        return;
+      }
+
       if (response.data?.response) {
         // Parse the response to extract JSON and message
         const responseText = response.data.response;
@@ -120,10 +140,21 @@ Please structure your response with the JSON first, followed by your supportive 
       }
     } catch (error) {
       console.error('Error analyzing meal:', error);
+      
+      // Provide a fallback analysis if the edge function fails
+      const fallbackEstimate = {
+        calories: 300, // Conservative estimate
+        protein: 15,
+        carbs: 30,
+        fats: 10
+      };
+      
+      setNutritionEstimate(fallbackEstimate);
+      
       toast({
-        title: "Analysis failed",
-        description: "We couldn't analyze your meal. Please try again.",
-        variant: "destructive"
+        title: "Meal logged! 💚",
+        description: "We couldn't analyze your meal right now, but we've logged it with basic estimates. Every bite is progress on your recovery journey!",
+        duration: 8000,
       });
     } finally {
       setIsAnalyzing(false);
