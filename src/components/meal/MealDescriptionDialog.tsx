@@ -85,12 +85,17 @@ Please structure your response with the JSON first, followed by your supportive 
         // Parse the response to extract JSON and message
         const responseText = response.data.response;
         
-        // Try to extract JSON from the response
-        const jsonMatch = responseText.match(/\{[^}]*"calories"[^}]*\}/);
+        // Try to extract JSON from the response - look for complete JSON object
+        const jsonMatch = responseText.match(/\{[\s\S]*?"calories"[\s\S]*?\}/);
         
         if (jsonMatch) {
           try {
-            const nutritionData = JSON.parse(jsonMatch[0]);
+            // Clean the JSON string - remove any non-numeric characters from numeric values
+            let jsonString = jsonMatch[0]
+              .replace(/(\d+)g/g, '$1') // Remove 'g' from protein, carbs, fats
+              .replace(/(\d+)\s*calories/g, '$1'); // Clean calories if needed
+            
+            const nutritionData = JSON.parse(jsonString);
             setNutritionEstimate(nutritionData);
             
             // Extract the supportive message (everything after the JSON)
