@@ -48,13 +48,71 @@ export const MealDescriptionDialog = ({
 
     setIsAnalyzing(true);
     try {
-      const response = await supabase.functions.invoke('analyze-meal', {
-        body: { description: description.trim() }
+      // Get user's therapy preferences for personalized support
+      const { data: userProfile } = await supabase
+        .from('Users')
+        .select('therapy_style')
+        .eq('user_id', userId)
+        .single();
+
+      const therapyMode = userProfile?.therapy_style || 'ACT';
+
+      // Use the chat-ai function for both nutrition analysis and therapeutic support
+      const response = await supabase.functions.invoke('chat-ai', {
+        body: {
+          message: `Please analyze this meal description and provide:
+1. Nutritional breakdown in this exact JSON format:
+{
+  "calories": number,
+  "protein": number,
+  "carbs": number,
+  "fats": number
+}
+
+2. A supportive, encouraging message about this meal choice that aligns with ${therapyMode} therapy principles for eating disorder recovery.
+
+Meal description: "${description}"
+
+Please structure your response with the JSON first, followed by your supportive message.`,
+          therapyMode,
+          userId
+        }
       });
 
       if (response.error) throw response.error;
 
-      setNutritionEstimate(response.data);
+      if (response.data?.response) {
+        // Parse the response to extract JSON and message
+        const responseText = response.data.response;
+        
+        // Try to extract JSON from the response
+        const jsonMatch = responseText.match(/\{[^}]*"calories"[^}]*\}/);
+        
+        if (jsonMatch) {
+          try {
+            const nutritionData = JSON.parse(jsonMatch[0]);
+            setNutritionEstimate(nutritionData);
+            
+            // Extract the supportive message (everything after the JSON)
+            const messageStart = responseText.indexOf(jsonMatch[0]) + jsonMatch[0].length;
+            const supportiveMessage = responseText.substring(messageStart).trim();
+            
+            if (supportiveMessage) {
+              toast({
+                title: "Meal analyzed! 💚",
+                description: supportiveMessage,
+                duration: 8000,
+              });
+            }
+          } catch (parseError) {
+            throw new Error('Failed to parse nutrition data');
+          }
+        } else {
+          throw new Error('No nutrition data found in response');
+        }
+      } else {
+        throw new Error('Failed to analyze meal');
+      }
     } catch (error) {
       console.error('Error analyzing meal:', error);
       toast({
