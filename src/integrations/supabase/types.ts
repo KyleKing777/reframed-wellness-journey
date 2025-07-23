@@ -159,6 +159,8 @@ export type Database = {
           avg_steps_per_day: number | null
           created_at: string
           email: string | null
+          fear_foods: Json | null
+          gender: string | null
           goal_weight_kg: number | null
           height_cm: number | null
           id: number
@@ -176,6 +178,8 @@ export type Database = {
           avg_steps_per_day?: number | null
           created_at?: string
           email?: string | null
+          fear_foods?: Json | null
+          gender?: string | null
           goal_weight_kg?: number | null
           height_cm?: number | null
           id?: number
@@ -193,6 +197,8 @@ export type Database = {
           avg_steps_per_day?: number | null
           created_at?: string
           email?: string | null
+          fear_foods?: Json | null
+          gender?: string | null
           goal_weight_kg?: number | null
           height_cm?: number | null
           id?: number
