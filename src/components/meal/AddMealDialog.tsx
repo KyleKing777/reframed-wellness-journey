@@ -41,27 +41,6 @@ export const AddMealDialog = ({
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Meal Type Selector */}
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-center">Meal Type:</p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {mealTypes.map((type) => (
-                <Badge
-                  key={type}
-                  variant={selectedMealType === type ? 'default' : 'outline'}
-                  className={`cursor-pointer transition-colors text-xs ${
-                    selectedMealType === type 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'hover:bg-accent'
-                  }`}
-                  onClick={() => onMealTypeChange(type)}
-                >
-                  {type}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
           {/* Add Methods */}
           <div className="space-y-3">
             <p className="text-sm font-medium text-center text-muted-foreground">

@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AddMealDialog } from '@/components/meal/AddMealDialog';
 import { MealDescriptionDialog } from '@/components/meal/MealDescriptionDialog';
 import { EncouragementBubble } from '@/components/EncouragementBubble';
+import { NutritionixIngredientSearch, type SelectedIngredient } from '@/components/meal/NutritionixIngredientSearch';
 interface Ingredient {
   name: string;
   quantity: string;
@@ -18,6 +19,7 @@ interface Ingredient {
   protein: number;
   carbs: number;
   fats: number;
+  brand?: string;
 }
 interface MealState {
   ingredients: Ingredient[];
@@ -36,7 +38,6 @@ const MealLogging = () => {
     toast
   } = useToast();
   const location = useLocation();
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedIngredients, setSelectedIngredients] = useState<Ingredient[]>([]);
   const [isAddMealOpen, setIsAddMealOpen] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState(getMealTypeByTime());
@@ -114,91 +115,18 @@ const MealLogging = () => {
     console.log('Add by photo - to be implemented');
   };
 
-  // Sample nutrition data - in a real app, this would come from an external API
-  const sampleNutritionData: Record<string, Omit<Ingredient, 'quantity'>> = {
-    'banana': {
-      name: 'Banana',
-      calories: 105,
-      protein: 1.3,
-      carbs: 27,
-      fats: 0.4
-    },
-    'apple': {
-      name: 'Apple',
-      calories: 95,
-      protein: 0.5,
-      carbs: 25,
-      fats: 0.3
-    },
-    'oatmeal': {
-      name: 'Oatmeal (1 cup)',
-      calories: 147,
-      protein: 5.3,
-      carbs: 25,
-      fats: 2.8
-    },
-    'chicken breast': {
-      name: 'Chicken Breast (100g)',
-      calories: 231,
-      protein: 43.5,
-      carbs: 0,
-      fats: 5
-    },
-    'brown rice': {
-      name: 'Brown Rice (1 cup)',
-      calories: 216,
-      protein: 5,
-      carbs: 45,
-      fats: 1.8
-    },
-    'avocado': {
-      name: 'Avocado (half)',
-      calories: 234,
-      protein: 2.9,
-      carbs: 12,
-      fats: 21.4
-    },
-    'Greek yogurt': {
-      name: 'Greek Yogurt (1 cup)',
-      calories: 130,
-      protein: 23,
-      carbs: 9,
-      fats: 0
-    },
-    'almonds': {
-      name: 'Almonds (28g)',
-      calories: 164,
-      protein: 6,
-      carbs: 6,
-      fats: 14
-    },
-    'broccoli': {
-      name: 'Broccoli (1 cup)',
-      calories: 55,
-      protein: 4,
-      carbs: 11,
-      fats: 0.6
-    },
-    'sweet potato': {
-      name: 'Sweet Potato (medium)',
-      calories: 112,
-      protein: 2,
-      carbs: 26,
-      fats: 0.1
-    }
-  };
-  const filteredIngredients = Object.keys(sampleNutritionData).filter(key => key.toLowerCase().includes(searchTerm.toLowerCase()));
-  const addIngredient = (ingredientKey: string) => {
-    const ingredient = sampleNutritionData[ingredientKey];
-    if (!ingredient) return;
-    const quantity = prompt(`How much ${ingredient.name}?`, '1 serving') || '1 serving';
+  const handleNutritionixIngredientAdd = (ingredient: SelectedIngredient) => {
     const newIngredient: Ingredient = {
-      ...ingredient,
-      quantity
+      name: ingredient.name,
+      quantity: ingredient.quantity,
+      calories: ingredient.calories,
+      protein: ingredient.protein,
+      carbs: ingredient.carbs,
+      fats: ingredient.fats,
+      brand: ingredient.brand
     };
     setSelectedIngredients(prev => [...prev, newIngredient]);
     updateMealTotals([...selectedIngredients, newIngredient]);
-    setSearchTerm('');
   };
   const updateMealTotals = (ingredients: Ingredient[]) => {
     const totals = ingredients.reduce((acc, ingredient) => ({
@@ -353,31 +281,8 @@ const MealLogging = () => {
           </CardContent>
         </Card>
 
-        {/* Search Bar */}
-        <Card className="shadow-gentle">
-          <CardContent className="pt-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search for ingredients..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
-            </div>
-
-            {/* Search Results */}
-            {searchTerm && <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
-                {filteredIngredients.map(key => {
-              const ingredient = sampleNutritionData[key];
-              return <div key={key} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors" onClick={() => addIngredient(key)}>
-                      <div>
-                        <p className="font-medium">{ingredient.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {ingredient.calories} cal, {ingredient.protein}g protein
-                        </p>
-                      </div>
-                      <Plus className="w-5 h-5 text-primary" />
-                    </div>;
-            })}
-              </div>}
-          </CardContent>
-        </Card>
+        {/* Nutritionix Search */}
+        <NutritionixIngredientSearch onIngredientAdd={handleNutritionixIngredientAdd} />
 
         {/* Selected Ingredients */}
         {selectedIngredients.length > 0 && <Card className="shadow-gentle">
@@ -389,6 +294,9 @@ const MealLogging = () => {
                   <div>
                     <p className="font-medium">{ingredient.name}</p>
                     <p className="text-sm text-muted-foreground">{ingredient.quantity}</p>
+                    {ingredient.brand && (
+                      <p className="text-xs text-muted-foreground/80">{ingredient.brand}</p>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium">{ingredient.calories} cal</p>
@@ -450,16 +358,16 @@ const MealLogging = () => {
   // Main home page interface
   return <div className="p-6 max-w-lg mx-auto">
       {/* Bubbly Header */}
-      <div className="mb-12 text-center">
-        <h1 className="font-bold bg-gradient-primary bg-clip-text text-transparent mb-3 text-3xl text-center">ReframED</h1>
+      <div className="mb-8 text-center">
+        <h1 className="font-bold bg-gradient-primary bg-clip-text text-transparent mb-4 text-3xl text-center">ReframED</h1>
         
-      </div>
-
-      {/* Main Action */}
-      <div className="space-y-8">
+        {/* Main Action - moved closer to header */}
         <Button onClick={handleAddMeal} className="w-full h-16 bg-gradient-primary hover:scale-105 text-primary-foreground rounded-2xl text-lg font-semibold shadow-gentle transition-all duration-300 transform">
           Add Meal
         </Button>
+      </div>
+
+      <div className="space-y-8">
 
         {/* Bubbly Meal Type Pills */}
         <div className="flex flex-wrap gap-2 justify-center">
