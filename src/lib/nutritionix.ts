@@ -1,5 +1,5 @@
-const NUTRITIONIX_API_KEY = 'ed0ec78a008c3fa2e91da84865d83a32';
-const NUTRITIONIX_APP_ID = 'your-app-id'; // TODO: Replace with your actual Nutritionix App ID
+const NUTRITIONIX_API_KEY = '89c078f002f7c879ba3a4923a06aa377';
+const NUTRITIONIX_APP_ID = 'b471d579';
 
 export interface NutritionixFood {
   food_name: string;
