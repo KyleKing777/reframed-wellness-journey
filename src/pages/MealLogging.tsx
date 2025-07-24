@@ -54,6 +54,8 @@ const MealLogging = () => {
   const [encouragementMessage, setEncouragementMessage] = useState('');
   const [isEncouragementOpen, setIsEncouragementOpen] = useState(false);
   const [dynamicEncouragement, setDynamicEncouragement] = useState('Nourish your body with love today');
+  const [mealsToday, setMealsToday] = useState(0);
+  const [daysStrong, setDaysStrong] = useState(0);
 
   // Update meal type if passed from navigation
   useEffect(() => {
@@ -89,6 +91,110 @@ const MealLogging = () => {
       generateDailyEncouragement();
     }
   }, [user?.id]);
+
+  // Fetch meal statistics
+  useEffect(() => {
+    const fetchMealStats = async () => {
+      if (!user?.id) return;
+
+      try {
+        // Get today's meals count
+        const today = new Date().toISOString().split('T')[0];
+        const { data: todayMeals, error: todayError } = await supabase
+          .from('Meals')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('date', today);
+
+        if (todayError) throw todayError;
+        setMealsToday(todayMeals?.length || 0);
+
+        // Calculate consecutive days streak
+        const { data: allMeals, error: allMealsError } = await supabase
+          .from('Meals')
+          .select('date')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false });
+
+        if (allMealsError) throw allMealsError;
+
+        if (allMeals && allMeals.length > 0) {
+          // Get unique dates and calculate streak
+          const uniqueDates = [...new Set(allMeals.map(meal => meal.date))].sort((a, b) => b.localeCompare(a));
+          
+          let streak = 0;
+          const today = new Date();
+          
+          for (let i = 0; i < uniqueDates.length; i++) {
+            const mealDate = new Date(uniqueDates[i]);
+            const daysDiff = Math.floor((today.getTime() - mealDate.getTime()) / (1000 * 60 * 60 * 24));
+            
+            if (daysDiff === i) {
+              streak++;
+            } else {
+              break;
+            }
+          }
+          
+          setDaysStrong(streak);
+        }
+      } catch (error) {
+        console.error('Error fetching meal stats:', error);
+      }
+    };
+
+    fetchMealStats();
+  }, [user?.id]);
+
+  // Function to refresh meal stats (used after completing a meal)
+  const refreshMealStats = async () => {
+    if (!user?.id) return;
+
+    try {
+      // Get today's meals count
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayMeals, error: todayError } = await supabase
+        .from('Meals')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('date', today);
+
+      if (todayError) throw todayError;
+      setMealsToday(todayMeals?.length || 0);
+
+      // Calculate consecutive days streak
+      const { data: allMeals, error: allMealsError } = await supabase
+        .from('Meals')
+        .select('date')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (allMealsError) throw allMealsError;
+
+      if (allMeals && allMeals.length > 0) {
+        // Get unique dates and calculate streak
+        const uniqueDates = [...new Set(allMeals.map(meal => meal.date))].sort((a, b) => b.localeCompare(a));
+        
+        let streak = 0;
+        const today = new Date();
+        
+        for (let i = 0; i < uniqueDates.length; i++) {
+          const mealDate = new Date(uniqueDates[i]);
+          const daysDiff = Math.floor((today.getTime() - mealDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysDiff === i) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+        
+        setDaysStrong(streak);
+      }
+    } catch (error) {
+      console.error('Error refreshing meal stats:', error);
+    }
+  };
   function getMealTypeByTime(): string {
     const hour = new Date().getHours();
     if (hour >= 4 && hour < 11) return 'Breakfast';
@@ -192,6 +298,9 @@ const MealLogging = () => {
 
       // Generate GPT encouragement
       generateEncouragement();
+
+      // Refresh meal stats
+      refreshMealStats();
 
       // Reset form
       setSelectedIngredients([]);
@@ -380,11 +489,11 @@ const MealLogging = () => {
       {/* Bubbly Stats */}
       <div className="grid grid-cols-2 gap-4 mt-12">
         <div className="text-center p-6 bg-gradient-healing rounded-xl shadow-gentle border border-primary/10">
-          <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">3</div>
+          <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">{mealsToday}</div>
           <p className="text-xs text-muted-foreground mt-1">Meals Today</p>
         </div>
         <div className="text-center p-6 bg-gradient-healing rounded-xl shadow-gentle border border-primary/10">
-          <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">7</div>
+          <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">{daysStrong}</div>
           <p className="text-xs text-muted-foreground mt-1">Days Strong</p>
         </div>
       </div>
