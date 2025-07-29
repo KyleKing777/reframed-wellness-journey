@@ -151,9 +151,20 @@ const Chat = () => {
     DBT: Lightbulb
   };
   const therapyModeDescriptions = {
-    ACT: "Acceptance & Commitment Therapy - Focus on values and mindful acceptance",
-    CBT: "Cognitive Behavioral Therapy - Examine thoughts and change patterns",
-    DBT: "Dialectical Behavior Therapy - Emotional regulation and distress tolerance"
+    ACT: "Acceptance & Commitment Therapy - Values-based approach with mindful acceptance",
+    CBT: "Cognitive Behavioral Therapy - Thought examination and pattern restructuring", 
+    DBT: "Dialectical Behavior Therapy - Emotional regulation and crisis tolerance skills"
+  };
+
+  const handleTherapyModeChange = (mode: 'ACT' | 'CBT' | 'DBT') => {
+    setTherapyMode(mode);
+    
+    // Add a subtle visual indication of the change
+    toast({
+      title: `Switched to ${mode}`,
+      description: therapyModeDescriptions[mode],
+      duration: 2000,
+    });
   };
   return <div className="flex flex-col h-screen bg-gradient-calm">
       {/* Header */}
@@ -168,7 +179,7 @@ const Chat = () => {
           <div className="flex gap-2">
             {(['ACT', 'CBT', 'DBT'] as const).map(mode => {
             const Icon = therapyModeIcons[mode];
-            return <Button key={mode} variant={therapyMode === mode ? 'default' : 'outline'} size="sm" onClick={() => setTherapyMode(mode)} className="flex items-center gap-2">
+            return <Button key={mode} variant={therapyMode === mode ? 'default' : 'outline'} size="sm" onClick={() => handleTherapyModeChange(mode)} className="flex items-center gap-2">
                   <Icon className="w-4 h-4" />
                   {mode}
                 </Button>;
