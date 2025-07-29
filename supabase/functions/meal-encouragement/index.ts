@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -24,14 +24,16 @@ serve(async (req) => {
       prompt = `The user just logged a ${mealData.mealType} with ${mealData.totalCalories} calories, ${mealData.totalProtein}g protein, ${mealData.totalCarbs}g carbs, and ${mealData.totalFats}g fat. Write a brief, warm response (2-3 sentences max) celebrating their meal. Use line breaks for readability. Focus on how this nourishment supports their recovery and body.`;
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${openRouterKey}`,
         'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://reframed-wellness-journey.vercel.app/',
+        'X-Title': 'ReframED Meal Encouragement'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'anthropic/claude-3.5-sonnet',
         messages: [
           { 
             role: 'system', 
@@ -40,14 +42,14 @@ serve(async (req) => {
           { role: 'user', content: prompt }
         ],
         max_tokens: 200,
-        temperature: 0.8,
+        temperature: 0.7,
       }),
     });
 
     const data = await response.json();
     
     if (!response.ok || !data.choices || !data.choices[0]) {
-      throw new Error(`OpenAI API error: ${response.status} - ${data.error?.message || 'Unknown error'}`);
+      throw new Error(`OpenRouter API error: ${response.status} - ${data.error?.message || 'Unknown error'}`);
     }
     
     const encouragement = data.choices[0].message.content;

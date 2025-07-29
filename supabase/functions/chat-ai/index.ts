@@ -33,7 +33,7 @@ serve(async (req) => {
         "X-Title": "ReframED Chatbot"                                     // optional, for attribution
       },
       body: JSON.stringify({
-        model: "mistralai/mistral-7b-instruct", // You can swap in another model here
+        model: "anthropic/claude-3.5-sonnet", // Using Claude 3.5 Sonnet through OpenRouter
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message }
