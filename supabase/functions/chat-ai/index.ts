@@ -72,7 +72,8 @@ Keep responses structured, validating, and focused on practical emotional regula
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message }
-        ]
+        ],
+        max_tokens: 2000  // Limit tokens to stay within credit limit
       }),
     });
 
