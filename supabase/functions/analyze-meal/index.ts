@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
+const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -28,14 +28,16 @@ serve(async (req) => {
       "fats": number
     }`;
 
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${perplexityApiKey}`,
+        'Authorization': `Bearer ${openRouterKey}`,
         'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://reframed-wellness-journey.vercel.app/',
+        'X-Title': 'ReframED Meal Analysis'
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
+        model: 'perplexity/llama-3.1-sonar-large-128k-online',
         messages: [
           { 
             role: 'system', 
@@ -45,9 +47,6 @@ serve(async (req) => {
         ],
         max_tokens: 200,
         temperature: 0.2,
-        top_p: 0.9,
-        search_domain_filter: ['usda.gov', 'nutritionix.com', 'nal.usda.gov'],
-        search_recency_filter: 'year',
       }),
     });
 
