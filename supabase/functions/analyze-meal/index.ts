@@ -22,9 +22,20 @@ serve(async (req) => {
       throw new Error('OpenRouter API key not configured');
     }
 
-    const prompt = `Search for accurate nutritional information for this meal: "${description}". 
-    
-    Look up current nutritional data from reliable sources and provide accurate estimates based on typical restaurant or homemade portions. Consider all ingredients and cooking methods.
+    const prompt = `Analyze this meal in detail: "${description}"
+
+    Break down each component of the meal separately, then provide totals:
+    1. Identify each food item and estimate its portion size
+    2. Calculate calories and macros for each component individually
+    3. Consider cooking methods (oil, butter, etc.) that add calories
+    4. Use realistic portion sizes for an adult meal
+    5. Sum up the totals
+
+    For example, if analyzing "8oz meatloaf with rice and vegetables":
+    - Meatloaf (8oz, mixed beef/pork): ~670 calories
+    - Rice pilaf (1 cup): ~220 calories  
+    - Vegetables with oil: ~150 calories
+    - Total: ~1040 calories
 
     Respond with ONLY a JSON object in this exact format:
     {
@@ -44,7 +55,7 @@ serve(async (req) => {
         'X-Title': 'ReframED Meal Analysis'
       },
       body: JSON.stringify({
-        model: 'perplexity/llama-3.1-sonar-large-128k-online',
+        model: 'perplexity/llama-3.1-sonar-small-128k-online',
         messages: [
           { 
             role: 'system', 
