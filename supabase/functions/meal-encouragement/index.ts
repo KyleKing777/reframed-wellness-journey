@@ -21,7 +21,7 @@ serve(async (req) => {
       prompt = "Generate a warm, encouraging message about eating and self-care for someone in eating disorder recovery. Keep it positive, supportive, and focused on nourishment. Make it unique and personal. 1-2 sentences maximum.";
     } else if (body.type === 'meal-celebration') {
       const { mealData } = body;
-      prompt = `The user just logged a ${mealData.mealType} with ${mealData.totalCalories} calories, ${mealData.totalProtein}g protein, ${mealData.totalCarbs}g carbs, and ${mealData.totalFats}g fat. Write a warm, encouraging paragraph celebrating their dedication to recovery and explaining the physiological benefits of this meal. Be specific about how these nutrients support their body and recovery journey.`;
+      prompt = `The user just logged a ${mealData.mealType} with ${mealData.totalCalories} calories, ${mealData.totalProtein}g protein, ${mealData.totalCarbs}g carbs, and ${mealData.totalFats}g fat. Write a brief, warm response (2-3 sentences max) celebrating their meal. Use line breaks for readability. Focus on how this nourishment supports their recovery and body.`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -35,7 +35,7 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are a warm, supportive AI assistant helping someone in eating disorder recovery. Focus on the positive aspects of nourishment and self-care. Be encouraging but not overly clinical.' 
+            content: 'You are a warm, supportive AI assistant helping someone in eating disorder recovery. Keep responses concise and well-formatted with line breaks between thoughts. Focus on positive nourishment and be encouraging but not clinical.' 
           },
           { role: 'user', content: prompt }
         ],
