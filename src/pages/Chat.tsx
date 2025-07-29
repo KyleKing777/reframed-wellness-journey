@@ -58,28 +58,53 @@ const Chat = () => {
     try {
       console.log(`Sending message with ${therapyMode} mode`);
 
-      // Call the AI chat function
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('chat-ai', {
+      // Fetch today's meals for context
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayMeals, error: mealsError } = await supabase
+        .from('Meals')
+        .select('meal_type, name, total_calories, total_protein, total_carbs, total_fat')
+        .eq('user_id', user.id)
+        .eq('date', today);
+
+      if (mealsError) throw mealsError;
+
+      // Create meal context for the chatbot
+      let mealContext = '';
+      if (todayMeals && todayMeals.length > 0) {
+        const totalCalories = todayMeals.reduce((sum, meal) => sum + (meal.total_calories || 0), 0);
+        const totalProtein = todayMeals.reduce((sum, meal) => sum + (meal.total_protein || 0), 0);
+        const totalCarbs = todayMeals.reduce((sum, meal) => sum + (meal.total_carbs || 0), 0);
+        const totalFat = todayMeals.reduce((sum, meal) => sum + (meal.total_fat || 0), 0);
+        
+        const mealsList = todayMeals.map(meal => 
+          `${meal.meal_type}: ${meal.name || 'Unnamed meal'} (${meal.total_calories || 0} cal, ${meal.total_protein || 0}g protein, ${meal.total_carbs || 0}g carbs, ${meal.total_fat || 0}g fat)`
+        ).join(', ');
+        
+        mealContext = `\n\nToday's meals: ${mealsList}. Daily totals: ${Math.round(totalCalories)} calories, ${Math.round(totalProtein)}g protein, ${Math.round(totalCarbs)}g carbs, ${Math.round(totalFat)}g fat. Reference these specific meals and nutrition data in your response when relevant.`;
+      } else {
+        mealContext = '\n\nNo meals logged today yet. Encourage the user to nourish themselves and log their meals.';
+      }
+
+      // Call the AI chat function with meal context
+      const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
-          message: currentMessage,
+          message: currentMessage + mealContext,
           therapyMode: therapyMode,
           userId: user.id
         }
       });
+
       console.log("Function data:", data);
-console.log("Function error:", error);
+      console.log("Function error:", error);
 
-if (error) {
-  throw error;
-}
-if (!data || !data.response) {
-  throw new Error("No response returned from chat function");
-}
+      if (error) {
+        throw error;
+      }
+      if (!data || !data.response) {
+        throw new Error("No response returned from chat function");
+      }
 
-const botResponse = data.response;
+      const botResponse = data.response;
 
       // Save to database
       const {

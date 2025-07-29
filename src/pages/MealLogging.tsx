@@ -72,9 +72,25 @@ const MealLogging = () => {
   useEffect(() => {
     const generateDailyEncouragement = async () => {
       try {
+        // Fetch today's meals for context
+        const today = new Date().toISOString().split('T')[0];
+        const { data: todayMeals } = await supabase
+          .from('Meals')
+          .select('meal_type, name, total_calories, total_protein, total_carbs, total_fat')
+          .eq('user_id', user?.id)
+          .eq('date', today);
+
+        let mealContext = '';
+        if (todayMeals && todayMeals.length > 0) {
+          const mealsList = todayMeals.map(meal => 
+            `${meal.meal_type}: ${meal.name || 'meal'}`
+          ).join(', ');
+          mealContext = ` Today you've already nourished yourself with: ${mealsList}. `;
+        }
+
         const response = await supabase.functions.invoke('chat-ai', {
           body: {
-            message: 'Please provide a brief, encouraging message for someone starting their day of mindful eating and recovery. Keep it supportive and aligned with eating disorder recovery principles.',
+            message: `Please provide a brief, encouraging message for someone starting their day of mindful eating and recovery.${mealContext}Keep it supportive and aligned with eating disorder recovery principles.`,
             therapyMode: 'ACT', // Default to ACT for daily encouragement
             userId: user?.id
           }
