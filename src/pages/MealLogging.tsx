@@ -204,7 +204,10 @@ const MealLogging = () => {
     return 'Morning Snack';
   }
   const handleAddMeal = () => {
-    setSelectedMealType(getMealTypeByTime());
+    // Don't override user's meal type selection - only set if no selection exists
+    if (!selectedMealType) {
+      setSelectedMealType(getMealTypeByTime());
+    }
     setIsAddMealOpen(true);
   };
   const handleAddByIngredient = () => {
@@ -363,6 +366,7 @@ const MealLogging = () => {
   };
   const handleMealLogged = (mealData: any) => {
     generateEncouragement(mealData);
+    refreshMealStats(); // Refresh stats after meal is logged
   };
 
   // If showing ingredient form, render the ingredient logging interface
