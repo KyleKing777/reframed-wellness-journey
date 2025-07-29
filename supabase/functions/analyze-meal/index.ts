@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -16,35 +16,38 @@ serve(async (req) => {
   try {
     const { description } = await req.json();
 
-    const prompt = `Analyze this meal description and provide nutritional estimates: "${description}"
+    const prompt = `Search for accurate nutritional information for this meal: "${description}". 
+    
+    Look up current nutritional data from reliable sources and provide accurate estimates based on typical restaurant or homemade portions. Consider all ingredients and cooking methods.
 
-Please respond with ONLY a JSON object in this exact format:
-{
-  "calories": number,
-  "protein": number,
-  "carbs": number,
-  "fats": number
-}
+    Respond with ONLY a JSON object in this exact format:
+    {
+      "calories": number,
+      "protein": number,
+      "carbs": number,  
+      "fats": number
+    }`;
 
-Base your estimates on typical serving sizes. Be realistic but not overly precise. For example, if someone says "chicken breast with rice and broccoli", estimate for a normal meal portion.`;
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${perplexityApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'llama-3.1-sonar-small-128k-online',
         messages: [
           { 
             role: 'system', 
-            content: 'You are a nutritional analysis AI. You provide estimates for calories, protein, carbs, and fats based on meal descriptions. Always respond with valid JSON only.' 
+            content: 'You are a nutritional analysis expert with access to current nutritional databases. Search for accurate nutritional information and provide realistic estimates based on typical serving sizes. Always respond with valid JSON only.' 
           },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 100,
-        temperature: 0.3,
+        max_tokens: 200,
+        temperature: 0.2,
+        top_p: 0.9,
+        search_domain_filter: ['usda.gov', 'nutritionix.com', 'nal.usda.gov'],
+        search_recency_filter: 'year',
       }),
     });
 

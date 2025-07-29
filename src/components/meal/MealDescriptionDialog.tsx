@@ -57,86 +57,46 @@ export const MealDescriptionDialog = ({
 
       const therapyMode = userProfile?.therapy_style || 'ACT';
 
-      // Use the chat-ai function for both nutrition analysis and therapeutic support
-      const response = await supabase.functions.invoke('chat-ai', {
+      // Use the improved analyze-meal function with internet access
+      const response = await supabase.functions.invoke('analyze-meal', {
         body: {
-          message: `Please analyze this meal description and provide:
-1. Nutritional breakdown in this exact JSON format:
-{
-  "calories": number,
-  "protein": number,
-  "carbs": number,
-  "fats": number
-}
-
-2. A supportive, encouraging message about this meal choice that aligns with ${therapyMode} therapy principles for eating disorder recovery.
-
-Meal description: "${description}"
-
-Please structure your response with the JSON first, followed by your supportive message.`,
-          therapyMode,
-          userId
+          description: description
         }
       });
 
       if (response.error) throw response.error;
 
-      // If edge function is unreachable, provide a fallback analysis
-      if (!response.data?.response) {
-        // Fallback: provide basic estimates and encouragement
-        const fallbackEstimate = {
-          calories: 300, // Conservative estimate
-          protein: 15,
-          carbs: 30,
-          fats: 10
-        };
-        
-        setNutritionEstimate(fallbackEstimate);
-        
-        toast({
-          title: "Meal logged! 💚",
-          description: "We couldn't analyze your meal right now, but we've logged it with basic estimates. Every bite is progress on your recovery journey!",
-          duration: 8000,
+      if (response.data && response.data.calories) {
+        setNutritionEstimate({
+          calories: response.data.calories || 0,
+          protein: response.data.protein || 0,
+          carbs: response.data.carbs || 0,
+          fats: response.data.fats || 0
         });
-        return;
-      }
 
-      if (response.data?.response) {
-        // Parse the response to extract JSON and message
-        const responseText = response.data.response;
-        
-        // Try to extract JSON from the response - look for complete JSON object
-        const jsonMatch = responseText.match(/\{[\s\S]*?"calories"[\s\S]*?\}/);
-        
-        if (jsonMatch) {
-          try {
-            // Clean the JSON string - remove any non-numeric characters from numeric values
-            let jsonString = jsonMatch[0]
-              .replace(/(\d+)g/g, '$1') // Remove 'g' from protein, carbs, fats
-              .replace(/(\d+)\s*calories/g, '$1'); // Clean calories if needed
-            
-            const nutritionData = JSON.parse(jsonString);
-            setNutritionEstimate(nutritionData);
-            
-            // Extract the supportive message (everything after the JSON)
-            const messageStart = responseText.indexOf(jsonMatch[0]) + jsonMatch[0].length;
-            const supportiveMessage = responseText.substring(messageStart).trim();
-            
-            if (supportiveMessage) {
-              toast({
-                title: "Meal analyzed! 💚",
-                description: supportiveMessage,
-                duration: 8000,
-              });
+        // Generate supportive message using chat-ai
+        try {
+          const supportResponse = await supabase.functions.invoke('chat-ai', {
+            body: {
+              message: `Please provide a brief, supportive message about this meal choice that aligns with ${therapyMode} therapy principles for eating disorder recovery. Meal: ${description} (${response.data.calories} calories). Keep it encouraging and recovery-focused.`,
+              therapyMode,
+              userId
             }
-          } catch (parseError) {
-            throw new Error('Failed to parse nutrition data');
+          });
+
+          if (supportResponse.data?.response) {
+            toast({
+              title: "Meal analyzed! 💚",
+              description: supportResponse.data.response,
+              duration: 8000,
+            });
           }
-        } else {
-          throw new Error('No nutrition data found in response');
+        } catch (supportError) {
+          console.error('Error generating support message:', supportError);
+          // Continue without the support message
         }
       } else {
-        throw new Error('Failed to analyze meal');
+        throw new Error('Invalid nutrition data received');
       }
     } catch (error) {
       console.error('Error analyzing meal:', error);
