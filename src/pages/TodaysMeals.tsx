@@ -3,10 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Calendar, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp, Plus, Eye, Edit2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import { MealDetailsDialog } from '@/components/meal/MealDetailsDialog';
+import { EditMealDialog } from '@/components/meal/EditMealDialog';
+import { DeleteMealDialog } from '@/components/meal/DeleteMealDialog';
 
 interface MealIngredient {
   id: number;
@@ -30,10 +34,17 @@ interface Meal {
 
 const TodaysMeals = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
   const [openMeals, setOpenMeals] = useState<Record<number, boolean>>({});
+  
+  // Dialog states
+  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
+  const [showMealDetails, setShowMealDetails] = useState(false);
+  const [showEditMeal, setShowEditMeal] = useState(false);
+  const [showDeleteMeal, setShowDeleteMeal] = useState(false);
 
   const getCurrentDateForApp = () => {
     const now = new Date();
@@ -111,6 +122,62 @@ const TodaysMeals = () => {
       }),
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
+  };
+
+  const handleViewMealDetails = (meal: Meal) => {
+    setSelectedMeal(meal);
+    setShowMealDetails(true);
+  };
+
+  const handleEditMeal = (meal: Meal) => {
+    setSelectedMeal(meal);
+    setShowEditMeal(true);
+    setShowMealDetails(false);
+  };
+
+  const handleDeleteMeal = (meal: Meal) => {
+    setSelectedMeal(meal);
+    setShowDeleteMeal(true);
+    setShowMealDetails(false);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedMeal) return;
+
+    try {
+      // Delete meal ingredients first
+      const { error: ingredientsError } = await supabase
+        .from('MealIngredients')
+        .delete()
+        .eq('meal_id', selectedMeal.id);
+
+      if (ingredientsError) throw ingredientsError;
+
+      // Delete the meal
+      const { error: mealError } = await supabase
+        .from('Meals')
+        .delete()
+        .eq('id', selectedMeal.id);
+
+      if (mealError) throw mealError;
+
+      toast({
+        title: "Success",
+        description: "Meal deleted successfully!"
+      });
+
+      // Refresh meals list
+      fetchMealsForDate(selectedDate);
+      setShowDeleteMeal(false);
+      setSelectedMeal(null);
+    } catch (error) {
+      console.error('Error deleting meal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete meal. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const mealTypeOrder = ['Breakfast', 'Lunch', 'Snack', 'Dinner'];
@@ -212,20 +279,61 @@ const TodaysMeals = () => {
                           {meal.total_calories?.toFixed(0)} cal
                         </Badge>
                       </div>
-                      {openMeals[meal.id] ? (
-                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                      )}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewMealDetails(meal);
+                          }}
+                          className="text-primary hover:text-primary"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditMeal(meal);
+                          }}
+                          className="text-primary hover:text-primary"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteMeal(meal);
+                          }}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                        {openMeals[meal.id] ? (
+                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                        )}
+                      </div>
                     </div>
-                    <div className="flex gap-2 text-sm">
-                      <span className="text-muted-foreground">
+                    <div 
+                      className="flex gap-2 text-sm cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewMealDetails(meal);
+                      }}
+                    >
+                      <span className="text-muted-foreground hover:text-primary transition-colors">
                         P: {meal.total_protein?.toFixed(1)}g
                       </span>
-                      <span className="text-muted-foreground">
+                      <span className="text-muted-foreground hover:text-primary transition-colors">
                         C: {meal.total_carbs?.toFixed(1)}g
                       </span>
-                      <span className="text-muted-foreground">
+                      <span className="text-muted-foreground hover:text-primary transition-colors">
                         F: {meal.total_fat?.toFixed(1)}g
                       </span>
                     </div>
@@ -291,6 +399,42 @@ const TodaysMeals = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Dialogs */}
+      <MealDetailsDialog
+        meal={selectedMeal}
+        isOpen={showMealDetails}
+        onClose={() => {
+          setShowMealDetails(false);
+          setSelectedMeal(null);
+        }}
+        onEdit={handleEditMeal}
+        onDelete={handleDeleteMeal}
+      />
+
+      <EditMealDialog
+        meal={selectedMeal}
+        isOpen={showEditMeal}
+        onClose={() => {
+          setShowEditMeal(false);
+          setSelectedMeal(null);
+        }}
+        onSave={() => {
+          fetchMealsForDate(selectedDate);
+          setShowEditMeal(false);
+          setSelectedMeal(null);
+        }}
+      />
+
+      <DeleteMealDialog
+        meal={selectedMeal}
+        isOpen={showDeleteMeal}
+        onClose={() => {
+          setShowDeleteMeal(false);
+          setSelectedMeal(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 };
