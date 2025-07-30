@@ -124,8 +124,15 @@ const MealLogging = () => {
 
   // Fetch meal statistics
   useEffect(() => {
+    console.log('🚀 MealLogging useEffect triggered, user:', user?.id);
+    
     const fetchMealStats = async () => {
-      if (!user?.id) return;
+      if (!user?.id) {
+        console.log('❌ No user ID, skipping meal stats fetch');
+        return;
+      }
+      
+      console.log('✅ Starting meal stats fetch for user:', user.id);
 
       try {
         // Use consistent date logic with TodaysMeals page
