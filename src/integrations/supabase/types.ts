@@ -84,7 +84,7 @@ export type Database = {
           created_at: string
           fats: number | null
           id: number
-          meal_id: string | null
+          meal_id: number | null
           name: string | null
           protein: number | null
           quantity: string | null
@@ -95,7 +95,7 @@ export type Database = {
           created_at?: string
           fats?: number | null
           id?: number
-          meal_id?: string | null
+          meal_id?: number | null
           name?: string | null
           protein?: number | null
           quantity?: string | null
@@ -106,12 +106,20 @@ export type Database = {
           created_at?: string
           fats?: number | null
           id?: number
-          meal_id?: string | null
+          meal_id?: number | null
           name?: string | null
           protein?: number | null
           quantity?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_meal_ingredients_meal_id"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "Meals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       Meals: {
         Row: {
