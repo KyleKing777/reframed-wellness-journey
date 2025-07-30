@@ -243,43 +243,48 @@ const MealLogging = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-md mx-auto px-6 py-8 space-y-8">
-        {/* Clean Header */}
-        <div className="text-center space-y-3">
-          <h1 className="text-3xl font-semibold text-foreground">Track Your Day</h1>
-          <p className="text-muted-foreground">
-            What would you like to log?
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/10">
+      <div className="max-w-md mx-auto px-6 py-12 space-y-8">
+        {/* Hero Question */}
+        <div className="text-center space-y-6">
+          <h1 className="text-4xl font-bold text-foreground">What are you having?</h1>
         </div>
 
-        {/* Clean Meal Type Grid */}
-        <div className="grid grid-cols-1 gap-3">
-          {mealTypes.map((type) => (
+        {/* Main Dialog Box */}
+        <div className="bg-card rounded-2xl shadow-lg border border-border p-6 space-y-4">
+          <div className="space-y-3">
             <button
-              key={type}
-              onClick={() => {
-                setSelectedMealType(type);
-                setIsAddMealOpen(true);
-              }}
-              className="p-4 rounded-lg border border-border hover:border-primary/40 bg-card hover:bg-accent/30 transition-all duration-200 text-left group"
+              onClick={handleAddByDescription}
+              className="w-full p-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors duration-200"
             >
-              <div className="font-medium text-foreground group-hover:text-primary transition-colors">
-                {type}
-              </div>
+              Describe your meal
             </button>
-          ))}
+            
+            <button
+              onClick={handleAddByIngredient}
+              className="w-full p-4 rounded-xl border border-border hover:border-primary/50 bg-background hover:bg-accent/30 text-foreground font-medium transition-all duration-200"
+            >
+              Add by ingredients
+            </button>
+            
+            <button
+              onClick={handleAddByPhoto}
+              className="w-full p-4 rounded-xl border border-border hover:border-primary/50 bg-background hover:bg-accent/30 text-foreground font-medium transition-all duration-200"
+            >
+              Take a photo
+            </button>
+          </div>
         </div>
 
-        {/* Clean Stats */}
-        <div className="grid grid-cols-2 gap-4 pt-4">
-          <div className="text-center p-4 bg-card rounded-lg border border-border">
-            <div className="text-2xl font-bold text-primary">{mealsToday}</div>
-            <p className="text-sm text-muted-foreground">Today</p>
+        {/* Stats Below */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="text-center p-6 bg-card rounded-xl border border-border shadow-sm">
+            <div className="text-3xl font-bold text-primary">{daysStrong}</div>
+            <p className="text-sm text-muted-foreground mt-1">Days Strong</p>
           </div>
-          <div className="text-center p-4 bg-card rounded-lg border border-border">
-            <div className="text-2xl font-bold text-primary">{daysStrong}</div>
-            <p className="text-sm text-muted-foreground">Day Streak</p>
+          <div className="text-center p-6 bg-card rounded-xl border border-border shadow-sm">
+            <div className="text-3xl font-bold text-primary">{mealsToday}</div>
+            <p className="text-sm text-muted-foreground mt-1">Meals Today</p>
           </div>
         </div>
       </div>
