@@ -112,65 +112,72 @@ const Profile = () => {
     setSaving(false);
   };
 
+  // Mifflin-St Jeor BMR calculation
   const calculateBMR = () => {
     if (!profile || !profile.weight_kg || !profile.height_cm || !profile.age || !profile.gender) return 0;
     
-    // Gender-specific BMR calculations as requested
+    // Mifflin-St Jeor equation: more accurate than Harris-Benedict
     if (profile.gender === 'male') {
-      return Math.round(88.362 + (13.397 * profile.weight_kg) + (4.799 * profile.height_cm) - (5.677 * profile.age));
+      return Math.round((10 * profile.weight_kg) + (6.25 * profile.height_cm) - (5 * profile.age) + 5);
     } else if (profile.gender === 'female') {
-      return Math.round(447.593 + (9.247 * profile.weight_kg) + (3.098 * profile.height_cm) - (4.330 * profile.age));
+      return Math.round((10 * profile.weight_kg) + (6.25 * profile.height_cm) - (5 * profile.age) - 161);
     }
     return 0;
   };
 
-  const calculateCaloricGoal = () => {
+  // Calculate Total Daily Energy Expenditure (TDEE)
+  const calculateTDEE = () => {
     const bmr = calculateBMR();
     if (!bmr || !profile) return 0;
 
-    let totalCalories = bmr;
+    // Activity level multipliers based on standard TDEE calculations
+    const activityMultipliers = {
+      'sedentary': 1.2,         // Little to no exercise
+      'lightly-active': 1.375,  // Light exercise 1-3 days/week
+      'moderately-active': 1.55, // Moderate exercise 3-5 days/week
+      'very-active': 1.725,     // Hard exercise 6-7 days/week
+      'extremely-active': 1.9   // Very hard exercise, physical job
+    };
 
-    // Add calories based on weekly weight gain goal
-    if (profile.weekly_weight_gain_goal) {
-      const weeklyGoalKg = profile.weekly_weight_gain_goal;
-      const weeklyGoalLbs = weeklyGoalKg * 2.20462; // Convert to pounds
-      
-      if (weeklyGoalLbs >= 0.5 && weeklyGoalLbs < 1) {
-        totalCalories += 500;
-      } else if (weeklyGoalLbs >= 1 && weeklyGoalLbs < 2) {
-        totalCalories += 750;
-      } else if (weeklyGoalLbs >= 2 && weeklyGoalLbs <= 3) {
-        totalCalories += 1000;
-      }
-    }
+    let tdee = bmr * (activityMultipliers[profile.activity_level as keyof typeof activityMultipliers] || 1.2);
 
-    // Add calories based on activity level
-    if (profile.activity_level) {
-      switch (profile.activity_level) {
-        case 'sedentary':
-          totalCalories += 200;
-          break;
-        case 'lightly-active':
-          totalCalories += 400;
-          break;
-        case 'moderately-active':
-          totalCalories += 600;
-          break;
-        case 'very-active':
-          totalCalories += 800;
-          break;
-        case 'extremely-active':
-          totalCalories += 1000;
-          break;
-      }
-    }
-
-    // Add step-based calories (0.04 * average daily steps)
+    // Additional step-based adjustment if steps significantly deviate from activity level expectations
     if (profile.avg_steps_per_day) {
-      totalCalories += Math.round(0.04 * profile.avg_steps_per_day);
+      const steps = profile.avg_steps_per_day;
+      let stepAdjustment = 0;
+      
+      // Adjust based on step count relative to activity level
+      if (profile.activity_level === 'sedentary' && steps > 5000) {
+        stepAdjustment = (steps - 5000) * 0.03; // Extra calories for more steps than expected
+      } else if (profile.activity_level === 'lightly-active' && steps > 7500) {
+        stepAdjustment = (steps - 7500) * 0.025;
+      } else if (profile.activity_level === 'moderately-active' && steps > 10000) {
+        stepAdjustment = (steps - 10000) * 0.02;
+      }
+      
+      tdee += stepAdjustment;
     }
 
-    return Math.round(totalCalories);
+    return Math.round(tdee);
+  };
+
+  // Calculate daily caloric goal including surplus for weight gain
+  const calculateCaloricGoal = () => {
+    const tdee = calculateTDEE();
+    if (!tdee || !profile) return 0;
+
+    let caloricGoal = tdee;
+
+    // Add caloric surplus based on weekly weight gain goal
+    if (profile.weekly_weight_gain_goal) {
+      // 1 kg = 2.2 lbs, 1 lb = ~3500 calories
+      // So 1 kg = ~7700 calories
+      const weeklyGoalKg = profile.weekly_weight_gain_goal;
+      const dailySurplus = (weeklyGoalKg * 7700) / 7; // Convert weekly goal to daily surplus
+      caloricGoal += Math.round(dailySurplus);
+    }
+
+    return Math.round(caloricGoal);
   };
 
   const handleSignOut = async () => {
@@ -209,6 +216,7 @@ const Profile = () => {
   }
 
   const bmr = calculateBMR();
+  const tdee = calculateTDEE();
   const caloricGoal = calculateCaloricGoal();
 
   return (
@@ -222,28 +230,37 @@ const Profile = () => {
       </div>
 
       {/* Key Metrics Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="shadow-gentle">
           <CardContent className="pt-6 text-center">
             <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">BMR</p>
             <p className="text-2xl font-bold text-primary">{bmr}</p>
-            <p className="text-xs text-muted-foreground">calories/day</p>
+            <p className="text-xs text-muted-foreground">basal metabolic rate</p>
           </CardContent>
         </Card>
         
         <Card className="shadow-gentle">
           <CardContent className="pt-6 text-center">
-            <Target className="w-6 h-6 text-primary mx-auto mb-2" />
+            <Target className="w-6 h-6 text-accent mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">TDEE</p>
+            <p className="text-2xl font-bold text-accent">{tdee}</p>
+            <p className="text-xs text-muted-foreground">maintenance calories</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="shadow-gentle">
+          <CardContent className="pt-6 text-center">
+            <Heart className="w-6 h-6 text-success mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Daily Caloric Goal</p>
-            <p className="text-2xl font-bold text-primary">{caloricGoal}</p>
-            <p className="text-xs text-muted-foreground">calories/day</p>
+            <p className="text-2xl font-bold text-success">{caloricGoal}</p>
+            <p className="text-xs text-muted-foreground">with weight gain surplus</p>
           </CardContent>
         </Card>
         
         <Card className="shadow-gentle">
           <CardContent className="pt-6 text-center">
-            <Heart className="w-6 h-6 text-primary mx-auto mb-2" />
+            <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Weight Goal</p>
             <p className="text-2xl font-bold text-primary">{profile.goal_weight_kg || 0}</p>
             <p className="text-xs text-muted-foreground">kg target</p>
