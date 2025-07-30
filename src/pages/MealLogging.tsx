@@ -145,6 +145,8 @@ const MealLogging = () => {
 
         // Get today's meals count
         const today = getCurrentDateForApp().toISOString().split('T')[0];
+        console.log('🔍 Fetching meals for date:', today, 'Current hour:', new Date().getHours());
+        
         const { data: todayMeals, error: todayError } = await supabase
           .from('Meals')
           .select('id')
@@ -152,6 +154,7 @@ const MealLogging = () => {
           .eq('date', today);
 
         if (todayError) throw todayError;
+        console.log('📊 Found meals for today:', todayMeals?.length || 0, 'meals');
         setMealsToday(todayMeals?.length || 0);
 
         // Calculate consecutive days streak
@@ -166,22 +169,30 @@ const MealLogging = () => {
         if (allMeals && allMeals.length > 0) {
           // Get unique dates and calculate streak
           const uniqueDates = [...new Set(allMeals.map(meal => meal.date))].sort((a, b) => b.localeCompare(a));
+          console.log('📅 All meal dates:', allMeals?.map(m => m.date) || []);
+          console.log('📅 Unique meal dates:', uniqueDates);
           
           let streak = 0;
-          const today = new Date();
+          const today = getCurrentDateForApp();
+          console.log('📅 Today for streak calculation:', today.toISOString().split('T')[0]);
           
           for (let i = 0; i < uniqueDates.length; i++) {
             const mealDate = new Date(uniqueDates[i]);
             const daysDiff = Math.floor((today.getTime() - mealDate.getTime()) / (1000 * 60 * 60 * 24));
+            console.log(`📊 Checking date ${uniqueDates[i]}: ${daysDiff} days ago`);
             
             if (daysDiff === i) {
               streak++;
             } else {
+              console.log(`❌ Streak broken at day ${i}, expected ${i} days ago but found ${daysDiff}`);
               break;
             }
           }
           
+          console.log('🔥 Final days strong streak:', streak);
           setDaysStrong(streak);
+        } else {
+          console.log('❌ No meals found for streak calculation');
         }
       } catch (error) {
         console.error('Error fetching meal stats:', error);
@@ -236,7 +247,7 @@ const MealLogging = () => {
         const uniqueDates = [...new Set(allMeals.map(meal => meal.date))].sort((a, b) => b.localeCompare(a));
         
         let streak = 0;
-        const today = new Date();
+        const today = getCurrentDateForApp();
         
         for (let i = 0; i < uniqueDates.length; i++) {
           const mealDate = new Date(uniqueDates[i]);
