@@ -12,7 +12,6 @@ import { AddMealDialog } from '@/components/meal/AddMealDialog';
 import { MealDescriptionDialog } from '@/components/meal/MealDescriptionDialog';
 import { EncouragementBubble } from '@/components/EncouragementBubble';
 import { NutritionixIngredientSearch, type SelectedIngredient } from '@/components/meal/NutritionixIngredientSearch';
-
 interface Ingredient {
   name: string;
   quantity: string;
@@ -22,7 +21,6 @@ interface Ingredient {
   fats: number;
   brand?: string;
 }
-
 interface MealState {
   ingredients: Ingredient[];
   totalCalories: number;
@@ -31,14 +29,15 @@ interface MealState {
   totalFats: number;
   mealType: string;
 }
-
 const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Morning Snack', 'Afternoon Snack', 'Late Night Snack'];
-
 const MealLogging = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const {
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const location = useLocation();
-  
   const [selectedIngredients, setSelectedIngredients] = useState<Ingredient[]>([]);
   const [isAddMealOpen, setIsAddMealOpen] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState(getMealTypeByTime());
@@ -57,71 +56,104 @@ const MealLogging = () => {
   const [dynamicEncouragement, setDynamicEncouragement] = useState('Nourish your body with love today');
   const [mealsToday, setMealsToday] = useState(0);
   const [daysStrong, setDaysStrong] = useState(0);
-  const [showMealOptions, setShowMealOptions] = useState(false);
 
-  function getMealTypeByTime(): string {
-    const hour = new Date().getHours();
-    if (hour >= 4 && hour < 11) return 'Breakfast';
-    if (hour >= 11 && hour < 15) return 'Lunch';
-    if (hour >= 15 && hour < 19) return 'Dinner';
-    if (hour >= 19 && hour < 22) return 'Late Night Snack';
-    return 'Morning Snack';
-  }
+  // Update meal type if passed from navigation
+  useEffect(() => {
+    if (location.state?.mealType) {
+      setSelectedMealType(location.state.mealType);
+      setCurrentMeal(prev => ({
+        ...prev,
+        mealType: location.state.mealType
+      }));
+    }
+  }, [location.state]);
 
-  // Simple meal statistics
+  // Generate dynamic encouragement on load
+  useEffect(() => {
+    const generateDailyEncouragement = async () => {
+      try {
+        // Fetch today's meals for context
+        const today = new Date().toISOString().split('T')[0];
+        const { data: todayMeals } = await supabase
+          .from('Meals')
+          .select('meal_type, name, total_calories, total_protein, total_carbs, total_fat')
+          .eq('user_id', user?.id)
+          .eq('date', today);
+
+        let mealContext = '';
+        if (todayMeals && todayMeals.length > 0) {
+          const mealsList = todayMeals.map(meal => 
+            `${meal.meal_type}: ${meal.name || 'meal'}`
+          ).join(', ');
+          mealContext = ` Today you've already nourished yourself with: ${mealsList}. `;
+        }
+
+        const response = await supabase.functions.invoke('chat-ai', {
+          body: {
+            message: `Please provide a brief, encouraging message for someone starting their day of mindful eating and recovery.${mealContext}Keep it supportive and aligned with eating disorder recovery principles.`,
+            therapyMode: 'ACT', // Default to ACT for daily encouragement
+            userId: user?.id
+          }
+        });
+        if (response.data?.response) {
+          setDynamicEncouragement(response.data.response);
+        }
+      } catch (error) {
+        console.error('Error generating encouragement:', error);
+      }
+    };
+    
+    if (user?.id) {
+      generateDailyEncouragement();
+    }
+  }, [user?.id]);
+
+  // Fetch meal statistics
   useEffect(() => {
     const fetchMealStats = async () => {
       if (!user?.id) return;
 
       try {
-        // Get today's date (simple calendar date)
+        // Get today's meals count
         const today = new Date().toISOString().split('T')[0];
-        console.log('📅 Checking meals for date:', today);
-
-        // Count today's meals
-        const { data: todayMeals } = await supabase
+        const { data: todayMeals, error: todayError } = await supabase
           .from('Meals')
           .select('id')
           .eq('user_id', user.id)
           .eq('date', today);
 
-        const todayCount = todayMeals?.length || 0;
-        console.log('🍽️ Meals today:', todayCount);
-        setMealsToday(todayCount);
+        if (todayError) throw todayError;
+        setMealsToday(todayMeals?.length || 0);
 
-        // Get all meal dates
-        const { data: allMeals } = await supabase
+        // Calculate consecutive days streak
+        const { data: allMeals, error: allMealsError } = await supabase
           .from('Meals')
           .select('date')
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .order('date', { ascending: false });
 
-        if (allMeals) {
-          // Get unique dates sorted newest first
+        if (allMealsError) throw allMealsError;
+
+        if (allMeals && allMeals.length > 0) {
+          // Get unique dates and calculate streak
           const uniqueDates = [...new Set(allMeals.map(meal => meal.date))].sort((a, b) => b.localeCompare(a));
-          console.log('📅 All unique meal dates:', uniqueDates);
-
-          // Count consecutive days starting from today
-          let consecutiveDays = 0;
-          const todayDate = new Date(today);
-
-          for (let i = 0; i < 365; i++) { // Check up to a year back
-            const checkDate = new Date(todayDate);
-            checkDate.setDate(checkDate.getDate() - i);
-            const checkDateStr = checkDate.toISOString().split('T')[0];
+          
+          let streak = 0;
+          const today = new Date();
+          
+          for (let i = 0; i < uniqueDates.length; i++) {
+            const mealDate = new Date(uniqueDates[i]);
+            const daysDiff = Math.floor((today.getTime() - mealDate.getTime()) / (1000 * 60 * 60 * 24));
             
-            if (uniqueDates.includes(checkDateStr)) {
-              consecutiveDays++;
-              console.log(`✅ Found meals on ${checkDateStr} (${i} days ago)`);
+            if (daysDiff === i) {
+              streak++;
             } else {
-              console.log(`❌ No meals on ${checkDateStr} (${i} days ago) - stopping count`);
               break;
             }
           }
-
-          console.log('🔥 Consecutive days:', consecutiveDays);
-          setDaysStrong(consecutiveDays);
+          
+          setDaysStrong(streak);
         }
-
       } catch (error) {
         console.error('Error fetching meal stats:', error);
       }
@@ -130,226 +162,370 @@ const MealLogging = () => {
     fetchMealStats();
   }, [user?.id]);
 
-  const handleIngredientSelect = (ingredient: SelectedIngredient) => {
-    setSelectedIngredients([...selectedIngredients, ingredient]);
-  };
-
-  const handleRemoveIngredient = (index: number) => {
-    const newIngredients = [...selectedIngredients];
-    newIngredients.splice(index, 1);
-    setSelectedIngredients(newIngredients);
-  };
-
-  const calculateTotals = (ingredients: Ingredient[]) => {
-    let totalCalories = 0;
-    let totalProtein = 0;
-    let totalCarbs = 0;
-    let totalFats = 0;
-
-    ingredients.forEach(ingredient => {
-      totalCalories += ingredient.calories;
-      totalProtein += ingredient.protein;
-      totalCarbs += ingredient.carbs;
-      totalFats += ingredient.fats;
-    });
-
-    return { totalCalories, totalProtein, totalCarbs, totalFats };
-  };
-
-  const handleUpdateMeal = (updatedMeal: MealState) => {
-    setCurrentMeal(updatedMeal);
-  };
-  
-  const handleMealLogged = async () => {
-    // Refresh stats after meal is added
+  // Function to refresh meal stats (used after completing a meal)
+  const refreshMealStats = async () => {
     if (!user?.id) return;
-    
-    const today = new Date().toISOString().split('T')[0];
-    
-    const { data: todayMeals } = await supabase
-      .from('Meals')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('date', today);
-    
-    setMealsToday(todayMeals?.length || 0);
-    
-    const { data: allMeals } = await supabase
-      .from('Meals')
-      .select('date')
-      .eq('user_id', user.id);
 
-    if (allMeals) {
-      const uniqueDates = [...new Set(allMeals.map(meal => meal.date))].sort((a, b) => b.localeCompare(a));
-      let consecutiveDays = 0;
-      const todayDate = new Date(today);
-
-      for (let i = 0; i < 365; i++) {
-        const checkDate = new Date(todayDate);
-        checkDate.setDate(checkDate.getDate() - i);
-        const checkDateStr = checkDate.toISOString().split('T')[0];
-        
-        if (uniqueDates.includes(checkDateStr)) {
-          consecutiveDays++;
-        } else {
-          break;
-        }
-      }
-      
-      setDaysStrong(consecutiveDays);
-    }
-
-    setIsDescriptionDialogOpen(false);
-    
-    // Generate and show encouragement
     try {
-      const response = await supabase.functions.invoke('meal-encouragement', {
-        body: {
-          type: 'meal-celebration',
-          mealData: {
-            mealType: selectedMealType,
-            totalCalories: currentMeal.totalCalories || 0,
-            totalProtein: currentMeal.totalProtein || 0,
-            totalCarbs: currentMeal.totalCarbs || 0,
-            totalFats: currentMeal.totalFats || 0
+      // Get today's meals count
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayMeals, error: todayError } = await supabase
+        .from('Meals')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('date', today);
+
+      if (todayError) throw todayError;
+      setMealsToday(todayMeals?.length || 0);
+
+      // Calculate consecutive days streak
+      const { data: allMeals, error: allMealsError } = await supabase
+        .from('Meals')
+        .select('date')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (allMealsError) throw allMealsError;
+
+      if (allMeals && allMeals.length > 0) {
+        // Get unique dates and calculate streak
+        const uniqueDates = [...new Set(allMeals.map(meal => meal.date))].sort((a, b) => b.localeCompare(a));
+        
+        let streak = 0;
+        const today = new Date();
+        
+        for (let i = 0; i < uniqueDates.length; i++) {
+          const mealDate = new Date(uniqueDates[i]);
+          const daysDiff = Math.floor((today.getTime() - mealDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysDiff === i) {
+            streak++;
+          } else {
+            break;
           }
         }
-      });
-      
-      if (response.data?.encouragement) {
-        setEncouragementMessage(response.data.encouragement);
-        setIsEncouragementOpen(true);
+        
+        setDaysStrong(streak);
       }
     } catch (error) {
-      console.error('Error generating encouragement:', error);
+      console.error('Error refreshing meal stats:', error);
     }
   };
-
-  const handleAddByDescription = () => {
-    setIsAddMealOpen(false);
-    setIsDescriptionDialogOpen(true);
+  function getMealTypeByTime(): string {
+    const hour = new Date().getHours();
+    if (hour >= 4 && hour < 11) return 'Breakfast';
+    if (hour >= 11 && hour < 15) return 'Lunch';
+    if (hour >= 15 && hour < 18) return 'Afternoon Snack';
+    if (hour >= 18 || hour < 4) return 'Dinner';
+    return 'Morning Snack';
+  }
+  const handleAddMeal = () => {
+    // Don't override user's meal type selection - only set if no selection exists
+    if (!selectedMealType) {
+      setSelectedMealType(getMealTypeByTime());
+    }
+    setIsAddMealOpen(true);
   };
-
   const handleAddByIngredient = () => {
     setIsAddMealOpen(false);
     setShowIngredientForm(true);
   };
-
+  const handleAddByDescription = () => {
+    setIsAddMealOpen(false);
+    setIsDescriptionDialogOpen(true);
+  };
   const handleAddByPhoto = () => {
     setIsAddMealOpen(false);
-    toast({
-      title: "Coming Soon!",
-      description: "Photo meal logging will be available soon.",
-    });
+    // TODO: Implement photo-based meal logging
+    console.log('Add by photo - to be implemented');
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/10">
-      <div className="max-w-md mx-auto px-6 py-12 space-y-8">
-        {/* Hero Question */}
-        <div className="text-center space-y-6">
-          <h1 className="text-4xl font-bold text-foreground">What are you having?</h1>
+  const handleNutritionixIngredientAdd = (ingredient: SelectedIngredient) => {
+    const newIngredient: Ingredient = {
+      name: ingredient.name,
+      quantity: ingredient.quantity,
+      calories: ingredient.calories,
+      protein: ingredient.protein,
+      carbs: ingredient.carbs,
+      fats: ingredient.fats,
+      brand: ingredient.brand
+    };
+    setSelectedIngredients(prev => [...prev, newIngredient]);
+    updateMealTotals([...selectedIngredients, newIngredient]);
+  };
+  const updateMealTotals = (ingredients: Ingredient[]) => {
+    const totals = ingredients.reduce((acc, ingredient) => ({
+      totalCalories: acc.totalCalories + ingredient.calories,
+      totalProtein: acc.totalProtein + ingredient.protein,
+      totalCarbs: acc.totalCarbs + ingredient.carbs,
+      totalFats: acc.totalFats + ingredient.fats
+    }), {
+      totalCalories: 0,
+      totalProtein: 0,
+      totalCarbs: 0,
+      totalFats: 0
+    });
+    setCurrentMeal(prev => ({
+      ...prev,
+      ingredients,
+      mealType: selectedMealType,
+      ...totals
+    }));
+  };
+  const completeMeal = async () => {
+    if (selectedIngredients.length === 0) {
+      toast({
+        title: "No ingredients added",
+        description: "Please add some ingredients to your meal first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    try {
+      // Save meal to database
+      const {
+        data: mealData,
+        error: mealError
+      } = await supabase.from('Meals').insert({
+        user_id: user?.id,
+        date: new Date().toISOString().split('T')[0],
+        meal_type: currentMeal.mealType,
+        total_calories: currentMeal.totalCalories,
+        total_protein: currentMeal.totalProtein,
+        total_carbs: currentMeal.totalCarbs,
+        total_fat: currentMeal.totalFats
+      }).select().single();
+      if (mealError) throw mealError;
+
+      // Save ingredients
+      const ingredientPromises = selectedIngredients.map(ingredient => supabase.from('MealIngredients').insert({
+        meal_id: mealData.id,
+        name: ingredient.name,
+        quantity: ingredient.quantity,
+        calories: ingredient.calories,
+        protein: ingredient.protein,
+        carbs: ingredient.carbs,
+        fats: ingredient.fats
+      }));
+      await Promise.all(ingredientPromises);
+
+      // Show success message
+      toast({
+        title: "Perfect!",
+        description: "Your meal has been logged successfully. You're doing great!"
+      });
+
+      // Generate GPT encouragement
+      generateEncouragement();
+
+      // Refresh meal stats
+      refreshMealStats();
+
+      // Reset form
+      setSelectedIngredients([]);
+      setCurrentMeal({
+        ingredients: [],
+        totalCalories: 0,
+        totalProtein: 0,
+        totalCarbs: 0,
+        totalFats: 0,
+        mealType: getMealTypeByTime()
+      });
+      setShowIngredientForm(false);
+    } catch (error) {
+      console.error('Error saving meal:', error);
+      toast({
+        title: "Error saving meal",
+        description: "There was a problem saving your meal. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+  const generateEncouragement = async (mealData?: any) => {
+    try {
+      // Get user's therapy preferences
+      const { data: userProfile } = await supabase
+        .from('Users')
+        .select('therapy_style')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      const therapyMode = userProfile?.therapy_style || 'ACT';
+      const meal = mealData || currentMeal;
+
+      const response = await supabase.functions.invoke('chat-ai', {
+        body: {
+          message: `Please provide a supportive, encouraging message celebrating this meal choice. Include the nutritional aspects in a positive way. Meal: ${meal.mealType} with ${meal.totalCalories} calories, ${meal.totalProtein}g protein, ${meal.totalCarbs}g carbs, ${meal.totalFats}g fats. Keep it brief and recovery-focused.`,
+          therapyMode,
+          userId: user?.id
+        }
+      });
+      
+      if (response.data?.response) {
+        setTimeout(() => {
+          setEncouragementMessage(response.data.response);
+          setIsEncouragementOpen(true);
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error generating encouragement:', error);
+      // Fallback to toast
+      const fallbackMessage = "You're doing an amazing job! Each meal is a step forward in your recovery journey.";
+      setTimeout(() => {
+        toast({
+          title: "You're doing amazing! 💚",
+          description: fallbackMessage,
+          duration: 6000
+        });
+      }, 1000);
+    }
+  };
+  const handleMealLogged = (mealData: any) => {
+    generateEncouragement(mealData);
+    refreshMealStats(); // Refresh stats after meal is logged
+  };
+
+  // If showing ingredient form, render the ingredient logging interface
+  if (showIngredientForm) {
+    return <div className="p-4 space-y-6 max-w-2xl mx-auto">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Log Your Meal</h1>
+          <p className="text-muted-foreground">Every bite is a step forward in your journey</p>
         </div>
 
         {/* Meal Type Selector */}
-        <div className="bg-card rounded-2xl shadow-lg border border-border p-6">
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-muted-foreground">Select meal type</label>
-            <select
-              value={selectedMealType}
-              onChange={(e) => setSelectedMealType(e.target.value)}
-              className="w-full p-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors"
-            >
-              {mealTypes.map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Main Dialog Box */}
-        <div className="bg-card rounded-2xl shadow-lg border border-border p-6 space-y-4">
-          {!showMealOptions ? (
-            <button
-              onClick={() => setShowMealOptions(true)}
-              className="w-full p-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors duration-200"
-            >
-              Add a meal
-            </button>
-          ) : (
-            <div className="space-y-3">
-              <button
-                onClick={handleAddByDescription}
-                className="w-full p-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors duration-200"
-              >
-                Add by Description
-              </button>
-              
-              <button
-                onClick={handleAddByIngredient}
-                className="w-full p-4 rounded-xl border border-border hover:border-primary/50 bg-background hover:bg-accent/30 text-foreground font-medium transition-all duration-200"
-              >
-                Add by Ingredient
-              </button>
-              
-              <button
-                onClick={handleAddByPhoto}
-                className="w-full p-4 rounded-xl border border-border hover:border-primary/50 bg-background hover:bg-accent/30 text-foreground font-medium transition-all duration-200"
-              >
-                Add by Photo
-              </button>
-
-              <button
-                onClick={() => setShowMealOptions(false)}
-                className="w-full p-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Back
-              </button>
+        <Card className="shadow-gentle">
+          <CardContent className="pt-6">
+            <div className="flex gap-2 mb-4">
+              {mealTypes.map(type => <Button key={type} variant={selectedMealType === type ? 'default' : 'outline'} size="sm" onClick={() => {
+              setSelectedMealType(type);
+              setCurrentMeal(prev => ({
+                ...prev,
+                mealType: type
+              }));
+            }}>
+                  {type}
+                </Button>)}
             </div>
-          )}
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Stats Below */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-6 bg-card rounded-xl border border-border shadow-sm">
-            <div className="text-3xl font-bold text-primary">{daysStrong}</div>
-            <p className="text-sm text-muted-foreground mt-1">Days Strong</p>
-          </div>
-          <div className="text-center p-6 bg-card rounded-xl border border-border shadow-sm">
-            <div className="text-3xl font-bold text-primary">{mealsToday}</div>
-            <p className="text-sm text-muted-foreground mt-1">Meals Today</p>
-          </div>
+        {/* Nutritionix Search */}
+        <NutritionixIngredientSearch onIngredientAdd={handleNutritionixIngredientAdd} />
+
+        {/* Selected Ingredients */}
+        {selectedIngredients.length > 0 && <Card className="shadow-gentle">
+            <CardHeader>
+              <CardTitle>Your {selectedMealType}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {selectedIngredients.map((ingredient, index) => <div key={index} className="flex items-center justify-between p-3 bg-accent/30 rounded-lg">
+                  <div>
+                    <p className="font-medium">{ingredient.name}</p>
+                    <p className="text-sm text-muted-foreground">{ingredient.quantity}</p>
+                    {ingredient.brand && (
+                      <p className="text-xs text-muted-foreground/80">{ingredient.brand}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{ingredient.calories} cal</p>
+                    <div className="flex gap-2 text-xs text-muted-foreground">
+                      <span>P: {ingredient.protein}g</span>
+                      <span>C: {ingredient.carbs}g</span>
+                      <span>F: {ingredient.fats}g</span>
+                    </div>
+                  </div>
+                </div>)}
+
+              {/* Meal Totals */}
+              <div className="pt-4 border-t border-border">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="font-semibold">Total</span>
+                  <span className="font-bold text-primary">{currentMeal.totalCalories} calories</span>
+                </div>
+                <div className="flex gap-4 text-sm">
+                  <Badge variant="secondary">Protein: {currentMeal.totalProtein.toFixed(1)}g</Badge>
+                  <Badge variant="secondary">Carbs: {currentMeal.totalCarbs.toFixed(1)}g</Badge>
+                  <Badge variant="secondary">Fat: {currentMeal.totalFats.toFixed(1)}g</Badge>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" className="flex-1" onClick={() => {
+              setSelectedIngredients([]);
+              updateMealTotals([]);
+            }}>
+                  Clear All
+                </Button>
+                <Button onClick={completeMeal} className="flex-1 bg-success hover:bg-success/90 text-success-foreground">
+                  <Heart className="w-4 h-4 mr-2" />
+                  Perfect!
+                </Button>
+              </div>
+
+              {/* Back Button */}
+              <Button variant="ghost" className="w-full mt-4" onClick={() => setShowIngredientForm(false)}>
+                Back to Home
+              </Button>
+            </CardContent>
+          </Card>}
+
+        {/* Encouraging Message */}
+        <Card className="bg-gradient-healing border-primary/20 shadow-gentle">
+          <CardContent className="pt-6 text-center">
+            <Heart className="w-8 h-8 text-primary mx-auto mb-3" />
+            <p className="text-foreground font-medium mb-2">You're doing amazing!</p>
+            <p className="text-sm text-muted-foreground">
+              Every meal is a loving act of self-care. Your body appreciates the nourishment.
+            </p>
+          </CardContent>
+        </Card>
+      </div>;
+  }
+
+  // Main home page interface
+  return <div className="p-6 max-w-lg mx-auto">
+      {/* Bubbly Header */}
+      <div className="mb-8 text-center">
+        <h1 className="font-bold bg-gradient-primary bg-clip-text text-transparent mb-4 text-3xl text-center">ReframED</h1>
+        
+        {/* Main Action - moved closer to header */}
+        <Button onClick={handleAddMeal} className="w-full h-16 bg-gradient-primary hover:scale-105 text-primary-foreground rounded-2xl text-lg font-semibold shadow-gentle transition-all duration-300 transform">
+          Add Meal
+        </Button>
+      </div>
+
+      <div className="space-y-8">
+
+        {/* Bubbly Meal Type Pills */}
+        <div className="flex flex-wrap gap-2 justify-center">
+          {mealTypes.map(type => <button key={type} className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105 ${selectedMealType === type ? 'bg-gradient-primary text-primary-foreground shadow-gentle' : 'bg-card text-card-foreground hover:bg-accent border border-border/50'}`} onClick={() => setSelectedMealType(type)}>
+              {type}
+            </button>)}
+        </div>
+      </div>
+
+      {/* Bubbly Stats */}
+      <div className="grid grid-cols-2 gap-4 mt-12">
+        <div className="text-center p-6 bg-gradient-healing rounded-xl shadow-gentle border border-primary/10">
+          <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">{mealsToday}</div>
+          <p className="text-xs text-muted-foreground mt-1">Meals Today</p>
+        </div>
+        <div className="text-center p-6 bg-gradient-healing rounded-xl shadow-gentle border border-primary/10">
+          <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">{daysStrong}</div>
+          <p className="text-xs text-muted-foreground mt-1">Days Strong</p>
         </div>
       </div>
 
       {/* Add Meal Dialog */}
-      <AddMealDialog 
-        isOpen={isAddMealOpen} 
-        onClose={() => setIsAddMealOpen(false)} 
-        selectedMealType={selectedMealType} 
-        onMealTypeChange={setSelectedMealType} 
-        onAddByDescription={handleAddByDescription} 
-        onAddByIngredient={handleAddByIngredient} 
-        onAddByPhoto={handleAddByPhoto} 
-      />
+      <AddMealDialog isOpen={isAddMealOpen} onClose={() => setIsAddMealOpen(false)} selectedMealType={selectedMealType} onMealTypeChange={setSelectedMealType} onAddByDescription={handleAddByDescription} onAddByIngredient={handleAddByIngredient} onAddByPhoto={handleAddByPhoto} />
 
       {/* Meal Description Dialog */}
-      <MealDescriptionDialog 
-        isOpen={isDescriptionDialogOpen} 
-        onClose={() => setIsDescriptionDialogOpen(false)} 
-        selectedMealType={selectedMealType} 
-        userId={user?.id || ''} 
-        onMealLogged={handleMealLogged} 
-      />
+      <MealDescriptionDialog isOpen={isDescriptionDialogOpen} onClose={() => setIsDescriptionDialogOpen(false)} selectedMealType={selectedMealType} userId={user?.id || ''} onMealLogged={handleMealLogged} />
 
       {/* Encouragement Bubble */}
-      <EncouragementBubble
-        isOpen={isEncouragementOpen}
-        onClose={() => setIsEncouragementOpen(false)}
-        message={encouragementMessage}
-      />
-    </div>
-  );
+      <EncouragementBubble isOpen={isEncouragementOpen} onClose={() => setIsEncouragementOpen(false)} message={encouragementMessage} />
+    </div>;
 };
-
 export default MealLogging;
