@@ -223,9 +223,9 @@ const Profile = () => {
       if (data.activity_level === 'sedentary' && steps > 5000) {
         stepAdjustment = (steps - 5000) * 0.03; // Extra calories for more steps than expected
       } else if (data.activity_level === 'lightly-active' && steps > 7500) {
-        stepAdjustment = (steps - 7500) * 0.025;
-      } else if (data.activity_level === 'moderately-active' && steps > 10000) {
-        stepAdjustment = (steps - 10000) * 0.02;
+        stepAdjustment = (steps - 7500) * 0.03;
+      } else {
+        stepAdjustment = (steps - 10000) * 0.03;
       }
       
       tdee += stepAdjustment;
