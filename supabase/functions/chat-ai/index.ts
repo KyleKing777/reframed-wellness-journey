@@ -8,6 +8,10 @@ const corsHeaders = {
 
 const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
 
+if (!openRouterApiKey) {
+  console.error("OPENROUTER_API_KEY not found in environment variables");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -15,6 +19,17 @@ serve(async (req) => {
 
   try {
     const { message, therapyMode, userId, isMealEncouragement, mealDetails } = await req.json();
+    
+    console.log("Received request:", { 
+      messageLength: message?.length, 
+      therapyMode, 
+      userId: userId ? "present" : "missing",
+      isMealEncouragement 
+    });
+
+    if (!openRouterApiKey) {
+      throw new Error("OpenRouter API key not configured");
+    }
 
     const systemPrompts: Record<string, string> = {
       ACT: `You are a warm, caring friend who happens to be trained in ACT therapy. You talk like a real person having a genuine conversation - not a therapist giving a session.
@@ -81,12 +96,16 @@ Remember: This is about celebrating their courage to eat and nourish themselves.
     };
 
     const systemPrompt = isMealEncouragement ? systemPrompts["MEAL_ENCOURAGEMENT"] : (systemPrompts[therapyMode] || systemPrompts["ACT"]);
+    
+    console.log("Making request to OpenRouter with model: anthropic/claude-3-5-sonnet-20241022");
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${openRouterApiKey}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": "https://lflrqcxqscqqyhojqynv.supabase.co",
+        "X-Title": "Mental Health Chat App"
       },
       body: JSON.stringify({
         model: "anthropic/claude-3-5-sonnet-20241022",
@@ -99,10 +118,19 @@ Remember: This is about celebrating their courage to eat and nourish themselves.
       }),
     });
 
+    console.log("OpenRouter response status:", response.status);
+    
     const data = await response.json();
+    console.log("OpenRouter response data:", JSON.stringify(data, null, 2));
 
-    if (!response.ok || !data.choices || !data.choices[0]) {
-      throw new Error(`OpenAI error: ${response.status} - ${data?.error?.message || "Unknown error"}`);
+    if (!response.ok) {
+      console.error("OpenRouter API error:", response.status, data);
+      throw new Error(`OpenRouter error: ${response.status} - ${data?.error?.message || JSON.stringify(data)}`);
+    }
+    
+    if (!data.choices || !data.choices[0]) {
+      console.error("No choices in response:", data);
+      throw new Error("No response choices returned from OpenRouter");
     }
 
     const botResponse = data.choices[0].message.content;
