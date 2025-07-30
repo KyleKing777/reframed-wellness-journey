@@ -266,80 +266,70 @@ const TodaysMeals = () => {
         ) : (
           sortedMeals.map((meal) => (
             <Card key={meal.id} className="shadow-gentle">
-              <Collapsible>
-                <CollapsibleTrigger 
-                  className="w-full"
-                  onClick={() => toggleMeal(meal.id)}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <CardTitle className="text-lg">{meal.meal_type}</CardTitle>
-                        <Badge variant="secondary">
-                          {meal.total_calories?.toFixed(0)} cal
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewMealDetails(meal);
-                          }}
-                          className="text-primary hover:text-primary"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditMeal(meal);
-                          }}
-                          className="text-primary hover:text-primary"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteMeal(meal);
-                          }}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                        {openMeals[meal.id] ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
-                      </div>
-                    </div>
-                    <div 
-                      className="flex gap-2 text-sm cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewMealDetails(meal);
-                      }}
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CardTitle className="text-lg">{meal.meal_type}</CardTitle>
+                    <Badge variant="secondary">
+                      {meal.total_calories?.toFixed(0)} cal
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewMealDetails(meal)}
+                      className="text-primary hover:text-primary"
                     >
-                      <span className="text-muted-foreground hover:text-primary transition-colors">
-                        P: {meal.total_protein?.toFixed(1)}g
-                      </span>
-                      <span className="text-muted-foreground hover:text-primary transition-colors">
-                        C: {meal.total_carbs?.toFixed(1)}g
-                      </span>
-                      <span className="text-muted-foreground hover:text-primary transition-colors">
-                        F: {meal.total_fat?.toFixed(1)}g
-                      </span>
-                    </div>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditMeal(meal)}
+                      className="text-primary hover:text-primary"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteMeal(meal)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleMeal(meal.id)}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      {openMeals[meal.id] ? (
+                        <ChevronUp className="w-5 h-5" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <div 
+                  className="flex gap-2 text-sm cursor-pointer"
+                  onClick={() => handleViewMealDetails(meal)}
+                >
+                  <span className="text-muted-foreground hover:text-primary transition-colors">
+                    P: {meal.total_protein?.toFixed(1)}g
+                  </span>
+                  <span className="text-muted-foreground hover:text-primary transition-colors">
+                    C: {meal.total_carbs?.toFixed(1)}g
+                  </span>
+                  <span className="text-muted-foreground hover:text-primary transition-colors">
+                    F: {meal.total_fat?.toFixed(1)}g
+                  </span>
+                </div>
+              </CardHeader>
+              
+              <Collapsible open={openMeals[meal.id]}>
                 <CollapsibleContent>
                   <CardContent className="pt-0">
                     <div className="space-y-2">
