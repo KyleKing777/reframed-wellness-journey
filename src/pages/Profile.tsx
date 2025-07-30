@@ -63,6 +63,9 @@ const Profile = () => {
       };
       
       setProfile(profileData);
+      
+      // Auto-calculate and store health metrics if missing or if base data has changed
+      await calculateAndStoreHealthMetrics(profileData);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast({
@@ -72,6 +75,47 @@ const Profile = () => {
       });
     }
     setLoading(false);
+  };
+
+  const calculateAndStoreHealthMetrics = async (profileData: UserProfile) => {
+    if (!profileData || !profileData.weight_kg || !profileData.height_cm || !profileData.age || !profileData.gender) {
+      return; // Cannot calculate without required data
+    }
+
+    // Calculate the metrics using the provided data
+    const calculatedBMR = calculateBMRFromData(profileData);
+    const calculatedTDEE = calculateTDEEFromData(profileData, calculatedBMR);
+    const calculatedCaloricGoal = calculateCaloricGoalFromData(profileData, calculatedTDEE);
+
+    // Only update if values are missing or different
+    if (profileData.bmr !== calculatedBMR || 
+        profileData.tdee !== calculatedTDEE || 
+        profileData.daily_caloric_goal !== calculatedCaloricGoal) {
+      
+      try {
+        const { error } = await supabase
+          .from('Users')
+          .update({
+            bmr: calculatedBMR,
+            tdee: calculatedTDEE,
+            daily_caloric_goal: calculatedCaloricGoal
+          })
+          .eq('id', profileData.id);
+
+        if (error) throw error;
+
+        // Update local state
+        setProfile(prev => prev ? {
+          ...prev,
+          bmr: calculatedBMR,
+          tdee: calculatedTDEE,
+          daily_caloric_goal: calculatedCaloricGoal
+        } : null);
+
+      } catch (error) {
+        console.error('Error updating health metrics:', error);
+      }
+    }
   };
 
   const updateProfile = async () => {
@@ -133,21 +177,31 @@ const Profile = () => {
 
   // Mifflin-St Jeor BMR calculation
   const calculateBMR = () => {
-    if (!profile || !profile.weight_kg || !profile.height_cm || !profile.age || !profile.gender) return 0;
+    if (!profile) return 0;
+    return calculateBMRFromData(profile);
+  };
+
+  const calculateBMRFromData = (data: UserProfile) => {
+    if (!data.weight_kg || !data.height_cm || !data.age || !data.gender) return 0;
     
     // Mifflin-St Jeor equation: more accurate than Harris-Benedict
-    if (profile.gender === 'male') {
-      return Math.round((10 * profile.weight_kg) + (6.25 * profile.height_cm) - (5 * profile.age) + 5);
-    } else if (profile.gender === 'female') {
-      return Math.round((10 * profile.weight_kg) + (6.25 * profile.height_cm) - (5 * profile.age) - 161);
+    if (data.gender === 'male') {
+      return Math.round((10 * data.weight_kg) + (6.25 * data.height_cm) - (5 * data.age) + 5);
+    } else if (data.gender === 'female') {
+      return Math.round((10 * data.weight_kg) + (6.25 * data.height_cm) - (5 * data.age) - 161);
     }
     return 0;
   };
 
   // Calculate Total Daily Energy Expenditure (TDEE)
   const calculateTDEE = () => {
+    if (!profile) return 0;
     const bmr = calculateBMR();
-    if (!bmr || !profile) return 0;
+    return calculateTDEEFromData(profile, bmr);
+  };
+
+  const calculateTDEEFromData = (data: UserProfile, bmr: number) => {
+    if (!bmr) return 0;
 
     // Activity level multipliers based on standard TDEE calculations
     const activityMultipliers = {
@@ -158,19 +212,19 @@ const Profile = () => {
       'extremely-active': 1.9   // Very hard exercise, physical job
     };
 
-    let tdee = bmr * (activityMultipliers[profile.activity_level as keyof typeof activityMultipliers] || 1.2);
+    let tdee = bmr * (activityMultipliers[data.activity_level as keyof typeof activityMultipliers] || 1.2);
 
     // Additional step-based adjustment if steps significantly deviate from activity level expectations
-    if (profile.avg_steps_per_day) {
-      const steps = profile.avg_steps_per_day;
+    if (data.avg_steps_per_day) {
+      const steps = data.avg_steps_per_day;
       let stepAdjustment = 0;
       
       // Adjust based on step count relative to activity level
-      if (profile.activity_level === 'sedentary' && steps > 5000) {
+      if (data.activity_level === 'sedentary' && steps > 5000) {
         stepAdjustment = (steps - 5000) * 0.03; // Extra calories for more steps than expected
-      } else if (profile.activity_level === 'lightly-active' && steps > 7500) {
+      } else if (data.activity_level === 'lightly-active' && steps > 7500) {
         stepAdjustment = (steps - 7500) * 0.025;
-      } else if (profile.activity_level === 'moderately-active' && steps > 10000) {
+      } else if (data.activity_level === 'moderately-active' && steps > 10000) {
         stepAdjustment = (steps - 10000) * 0.02;
       }
       
@@ -182,16 +236,21 @@ const Profile = () => {
 
   // Calculate daily caloric goal including surplus for weight gain
   const calculateCaloricGoal = () => {
+    if (!profile) return 0;
     const tdee = calculateTDEE();
-    if (!tdee || !profile) return 0;
+    return calculateCaloricGoalFromData(profile, tdee);
+  };
+
+  const calculateCaloricGoalFromData = (data: UserProfile, tdee: number) => {
+    if (!tdee) return 0;
 
     let caloricGoal = tdee;
 
     // Add caloric surplus based on weekly weight gain goal
-    if (profile.weekly_weight_gain_goal) {
+    if (data.weekly_weight_gain_goal) {
       // 1 kg = 2.2 lbs, 1 lb = ~3500 calories
       // So 1 kg = ~7700 calories
-      const weeklyGoalKg = profile.weekly_weight_gain_goal;
+      const weeklyGoalKg = data.weekly_weight_gain_goal;
       const dailySurplus = (weeklyGoalKg * 7700) / 7; // Convert weekly goal to daily surplus
       caloricGoal += Math.round(dailySurplus);
     }
