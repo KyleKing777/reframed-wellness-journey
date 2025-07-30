@@ -299,7 +299,7 @@ const MealLogging = () => {
 
       // Save ingredients
       const ingredientPromises = selectedIngredients.map(ingredient => supabase.from('MealIngredients').insert({
-        meal_id: mealData.id.toString(),
+        meal_id: mealData.id,
         name: ingredient.name,
         quantity: ingredient.quantity,
         calories: ingredient.calories,

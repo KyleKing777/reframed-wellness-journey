@@ -76,7 +76,7 @@ const TodaysMeals = () => {
           const { data: ingredients, error: ingredientsError } = await supabase
             .from('MealIngredients')
             .select('*')
-            .eq('meal_id', meal.id.toString());
+            .eq('meal_id', meal.id);
 
           if (ingredientsError) {
             console.error('Error fetching ingredients:', ingredientsError);
