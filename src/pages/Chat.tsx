@@ -58,14 +58,49 @@ const Chat = () => {
     try {
       console.log(`Sending message with ${therapyMode} mode`);
 
-      // Temporarily simplified - just send the basic message without complex meal context
-      console.log(`Sending message with ${therapyMode} mode`);
+      // Fetch today's meals for context
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayMeals, error: mealsError } = await supabase
+        .from('Meals')
+        .select('id, meal_type, name, total_calories, total_protein, total_carbs, total_fat')
+        .eq('user_id', user.id)
+        .eq('date', today);
 
-      // Call the AI chat function without meal context for testing
-      console.log('Calling chat-ai function...');
+      if (mealsError) throw mealsError;
+
+      // Create meal context for the chatbot
+      let mealContext = '';
+      if (todayMeals && todayMeals.length > 0) {
+        const totalCalories = todayMeals.reduce((sum, meal) => sum + (meal.total_calories || 0), 0);
+        const totalProtein = todayMeals.reduce((sum, meal) => sum + (meal.total_protein || 0), 0);
+        const totalCarbs = todayMeals.reduce((sum, meal) => sum + (meal.total_carbs || 0), 0);
+        const totalFat = todayMeals.reduce((sum, meal) => sum + (meal.total_fat || 0), 0);
+        
+        // Fetch ingredients for each meal
+        const mealsWithIngredients = await Promise.all(
+          todayMeals.map(async (meal) => {
+            const { data: ingredients } = await supabase
+              .from('MealIngredients')
+              .select('name, quantity, calories, protein, carbs, fats')
+              .eq('meal_id', meal.id);
+            
+            const ingredientsList = ingredients?.map(ing => 
+              `${ing.name} (${ing.quantity})`
+            ).join(', ') || 'No ingredients';
+            
+            return `${meal.meal_type}: ${meal.name || 'Unnamed meal'} - ${ingredientsList} (${meal.total_calories || 0} cal, ${meal.total_protein || 0}g protein, ${meal.total_carbs || 0}g carbs, ${meal.total_fat || 0}g fat)`;
+          })
+        );
+        
+        mealContext = `\n\nToday's meals: ${mealsWithIngredients.join('; ')}. Daily totals: ${Math.round(totalCalories)} calories, ${Math.round(totalProtein)}g protein, ${Math.round(totalCarbs)}g carbs, ${Math.round(totalFat)}g fat. Reference these specific meals, ingredients, and nutrition data in your response when relevant.`;
+      } else {
+        mealContext = '\n\nNo meals logged today yet. Encourage the user to nourish themselves and log their meals.';
+      }
+
+      // Call the AI chat function with meal context
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
-          message: currentMessage,
+          message: currentMessage + mealContext,
           therapyMode: therapyMode,
           userId: user.id
         }
