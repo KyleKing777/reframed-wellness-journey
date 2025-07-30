@@ -125,7 +125,19 @@ Remember: This is about celebrating their courage to eat and nourish themselves.
 
     if (!response.ok) {
       console.error("OpenRouter API error:", response.status, data);
-      throw new Error(`OpenRouter error: ${response.status} - ${data?.error?.message || JSON.stringify(data)}`);
+      
+      // Check for common error types
+      if (response.status === 402) {
+        throw new Error("OpenRouter credits exhausted. Please add credits to your OpenRouter account.");
+      } else if (response.status === 401) {
+        throw new Error("OpenRouter API key is invalid or missing.");
+      } else if (response.status === 429) {
+        throw new Error("OpenRouter rate limit exceeded. Please try again later.");
+      } else if (data?.error?.message) {
+        throw new Error(`OpenRouter error: ${data.error.message}`);
+      } else {
+        throw new Error(`OpenRouter error: ${response.status} - ${JSON.stringify(data)}`);
+      }
     }
     
     if (!data.choices || !data.choices[0]) {
