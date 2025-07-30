@@ -58,68 +58,14 @@ const Chat = () => {
     try {
       console.log(`Sending message with ${therapyMode} mode`);
 
-      // Fetch today's meals for context
-      const today = new Date().toISOString().split('T')[0];
-      console.log('Fetching meals for date:', today);
-      
-      const { data: todayMeals, error: mealsError } = await supabase
-        .from('Meals')
-        .select('id, meal_type, name, total_calories, total_protein, total_carbs, total_fat')
-        .eq('user_id', user.id)
-        .eq('date', today);
+      // Temporarily simplified - just send the basic message without complex meal context
+      console.log(`Sending message with ${therapyMode} mode`);
 
-      if (mealsError) {
-        console.error('Error fetching meals:', mealsError);
-        throw mealsError;
-      }
-
-      console.log('Fetched meals:', todayMeals);
-
-      // Create meal context for the chatbot
-      let mealContext = '';
-      if (todayMeals && todayMeals.length > 0) {
-        const totalCalories = todayMeals.reduce((sum, meal) => sum + (meal.total_calories || 0), 0);
-        const totalProtein = todayMeals.reduce((sum, meal) => sum + (meal.total_protein || 0), 0);
-        const totalCarbs = todayMeals.reduce((sum, meal) => sum + (meal.total_carbs || 0), 0);
-        const totalFat = todayMeals.reduce((sum, meal) => sum + (meal.total_fat || 0), 0);
-        
-        console.log('Fetching ingredients for meals...');
-        // Fetch ingredients for each meal
-        const mealsWithIngredients = await Promise.all(
-          todayMeals.map(async (meal) => {
-            console.log(`Fetching ingredients for meal ${meal.id}`);
-            const { data: ingredients, error: ingredientsError } = await supabase
-              .from('MealIngredients')
-              .select('name, quantity, calories, protein, carbs, fats')
-              .eq('meal_id', meal.id);
-            
-            if (ingredientsError) {
-              console.error(`Error fetching ingredients for meal ${meal.id}:`, ingredientsError);
-              return `${meal.meal_type}: ${meal.name || 'Unnamed meal'} (${meal.total_calories || 0} cal, ${meal.total_protein || 0}g protein, ${meal.total_carbs || 0}g carbs, ${meal.total_fat || 0}g fat)`;
-            }
-            
-            console.log(`Ingredients for meal ${meal.id}:`, ingredients);
-            const ingredientsList = ingredients?.map(ing => 
-              `${ing.name} (${ing.quantity})`
-            ).join(', ') || 'No ingredients';
-            
-            return `${meal.meal_type}: ${meal.name || 'Unnamed meal'} - ${ingredientsList} (${meal.total_calories || 0} cal, ${meal.total_protein || 0}g protein, ${meal.total_carbs || 0}g carbs, ${meal.total_fat || 0}g fat)`;
-          })
-        );
-        
-        console.log('Meals with ingredients:', mealsWithIngredients);
-        mealContext = `\n\nToday's meals: ${mealsWithIngredients.join('; ')}. Daily totals: ${Math.round(totalCalories)} calories, ${Math.round(totalProtein)}g protein, ${Math.round(totalCarbs)}g carbs, ${Math.round(totalFat)}g fat. Reference these specific meals, ingredients, and nutrition data in your response when relevant.`;
-      } else {
-        mealContext = '\n\nNo meals logged today yet. Encourage the user to nourish themselves and log their meals.';
-      }
-
-      console.log('Final meal context:', mealContext);
-
-      // Call the AI chat function with meal context
+      // Call the AI chat function without meal context for testing
       console.log('Calling chat-ai function...');
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
-          message: currentMessage + mealContext,
+          message: currentMessage,
           therapyMode: therapyMode,
           userId: user.id
         }
