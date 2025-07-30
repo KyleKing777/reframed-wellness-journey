@@ -57,6 +57,7 @@ const MealLogging = () => {
   const [dynamicEncouragement, setDynamicEncouragement] = useState('Nourish your body with love today');
   const [mealsToday, setMealsToday] = useState(0);
   const [daysStrong, setDaysStrong] = useState(0);
+  const [showMealOptions, setShowMealOptions] = useState(false);
 
   function getMealTypeByTime(): string {
     const hour = new Date().getHours();
@@ -250,30 +251,62 @@ const MealLogging = () => {
           <h1 className="text-4xl font-bold text-foreground">What are you having?</h1>
         </div>
 
+        {/* Meal Type Selector */}
+        <div className="bg-card rounded-2xl shadow-lg border border-border p-6">
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-muted-foreground">Select meal type</label>
+            <select
+              value={selectedMealType}
+              onChange={(e) => setSelectedMealType(e.target.value)}
+              className="w-full p-3 rounded-xl border border-border bg-background text-foreground focus:border-primary focus:outline-none transition-colors"
+            >
+              {mealTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {/* Main Dialog Box */}
         <div className="bg-card rounded-2xl shadow-lg border border-border p-6 space-y-4">
-          <div className="space-y-3">
+          {!showMealOptions ? (
             <button
-              onClick={handleAddByDescription}
+              onClick={() => setShowMealOptions(true)}
               className="w-full p-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors duration-200"
             >
-              Describe your meal
+              Add a meal
             </button>
-            
-            <button
-              onClick={handleAddByIngredient}
-              className="w-full p-4 rounded-xl border border-border hover:border-primary/50 bg-background hover:bg-accent/30 text-foreground font-medium transition-all duration-200"
-            >
-              Add by ingredients
-            </button>
-            
-            <button
-              onClick={handleAddByPhoto}
-              className="w-full p-4 rounded-xl border border-border hover:border-primary/50 bg-background hover:bg-accent/30 text-foreground font-medium transition-all duration-200"
-            >
-              Take a photo
-            </button>
-          </div>
+          ) : (
+            <div className="space-y-3">
+              <button
+                onClick={handleAddByDescription}
+                className="w-full p-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors duration-200"
+              >
+                Add by Description
+              </button>
+              
+              <button
+                onClick={handleAddByIngredient}
+                className="w-full p-4 rounded-xl border border-border hover:border-primary/50 bg-background hover:bg-accent/30 text-foreground font-medium transition-all duration-200"
+              >
+                Add by Ingredient
+              </button>
+              
+              <button
+                onClick={handleAddByPhoto}
+                className="w-full p-4 rounded-xl border border-border hover:border-primary/50 bg-background hover:bg-accent/30 text-foreground font-medium transition-all duration-200"
+              >
+                Add by Photo
+              </button>
+
+              <button
+                onClick={() => setShowMealOptions(false)}
+                className="w-full p-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Back
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Stats Below */}
