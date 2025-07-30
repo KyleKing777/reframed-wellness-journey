@@ -66,6 +66,30 @@ export const EditMealDialog = ({ meal, isOpen, onClose, onSave }: EditMealDialog
     setIngredients(prev => prev.filter(ing => ing.id !== ingredientId));
   };
 
+  const updateIngredientQuantity = (ingredientId: number, newQuantity: string) => {
+    setIngredients(prev => prev.map(ingredient => {
+      if (ingredient.id === ingredientId) {
+        // Parse the original quantity to get the multiplier
+        const originalQuantity = parseFloat(ingredient.quantity.split(' ')[0]) || 1;
+        const newQuantityNum = parseFloat(newQuantity) || 1;
+        const multiplier = newQuantityNum / originalQuantity;
+        
+        // Get the unit from the original quantity
+        const unit = ingredient.quantity.split(' ').slice(1).join(' ') || 'serving';
+        
+        return {
+          ...ingredient,
+          quantity: `${newQuantity} ${unit}`,
+          calories: Math.round((ingredient.calories / originalQuantity) * newQuantityNum),
+          protein: Math.round(((ingredient.protein / originalQuantity) * newQuantityNum) * 10) / 10,
+          carbs: Math.round(((ingredient.carbs / originalQuantity) * newQuantityNum) * 10) / 10,
+          fats: Math.round(((ingredient.fats / originalQuantity) * newQuantityNum) * 10) / 10,
+        };
+      }
+      return ingredient;
+    }));
+  };
+
   const addIngredient = (newIngredient: Omit<MealIngredient, 'id'>) => {
     const ingredient: MealIngredient = {
       ...newIngredient,
@@ -234,9 +258,23 @@ export const EditMealDialog = ({ meal, isOpen, onClose, onSave }: EditMealDialog
                     >
                       <div className="flex-1">
                         <h4 className="font-medium">{ingredient.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {ingredient.quantity}
-                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Label htmlFor={`quantity-${ingredient.id}`} className="text-xs text-muted-foreground">
+                            Quantity:
+                          </Label>
+                          <Input
+                            id={`quantity-${ingredient.id}`}
+                            type="number"
+                            value={parseFloat(ingredient.quantity.split(' ')[0]) || 1}
+                            onChange={(e) => updateIngredientQuantity(ingredient.id, e.target.value)}
+                            className="w-20 h-6 text-xs"
+                            min="0.1"
+                            step="0.1"
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {ingredient.quantity.split(' ').slice(1).join(' ') || 'serving'}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right text-sm">

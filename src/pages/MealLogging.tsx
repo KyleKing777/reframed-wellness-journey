@@ -253,6 +253,34 @@ const MealLogging = () => {
     setSelectedIngredients(prev => [...prev, newIngredient]);
     updateMealTotals([...selectedIngredients, newIngredient]);
   };
+
+  const updateIngredientQuantity = (index: number, newQuantity: string) => {
+    setSelectedIngredients(prev => {
+      const updatedIngredients = prev.map((ingredient, i) => {
+        if (i === index) {
+          // Parse the original quantity to get the multiplier
+          const originalQuantity = parseFloat(ingredient.quantity.split(' ')[0]) || 1;
+          const newQuantityNum = parseFloat(newQuantity) || 1;
+          
+          // Get the unit from the original quantity
+          const unit = ingredient.quantity.split(' ').slice(1).join(' ') || 'serving';
+          
+          return {
+            ...ingredient,
+            quantity: `${newQuantity} ${unit}`,
+            calories: Math.round((ingredient.calories / originalQuantity) * newQuantityNum),
+            protein: Math.round(((ingredient.protein / originalQuantity) * newQuantityNum) * 10) / 10,
+            carbs: Math.round(((ingredient.carbs / originalQuantity) * newQuantityNum) * 10) / 10,
+            fats: Math.round(((ingredient.fats / originalQuantity) * newQuantityNum) * 10) / 10,
+          };
+        }
+        return ingredient;
+      });
+      
+      updateMealTotals(updatedIngredients);
+      return updatedIngredients;
+    });
+  };
   const updateMealTotals = (ingredients: Ingredient[]) => {
     const totals = ingredients.reduce((acc, ingredient) => ({
       totalCalories: acc.totalCalories + ingredient.calories,
@@ -420,11 +448,26 @@ const MealLogging = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {selectedIngredients.map((ingredient, index) => <div key={index} className="flex items-center justify-between p-3 bg-accent/30 rounded-lg">
-                  <div>
+                  <div className="flex-1">
                     <p className="font-medium">{ingredient.name}</p>
-                    <p className="text-sm text-muted-foreground">{ingredient.quantity}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <label className="text-xs text-muted-foreground">
+                        Quantity:
+                      </label>
+                      <Input
+                        type="number"
+                        value={parseFloat(ingredient.quantity.split(' ')[0]) || 1}
+                        onChange={(e) => updateIngredientQuantity(index, e.target.value)}
+                        className="w-16 h-6 text-xs"
+                        min="0.1"
+                        step="0.1"
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {ingredient.quantity.split(' ').slice(1).join(' ') || 'serving'}
+                      </span>
+                    </div>
                     {ingredient.brand && (
-                      <p className="text-xs text-muted-foreground/80">{ingredient.brand}</p>
+                      <p className="text-xs text-muted-foreground/80 mt-1">{ingredient.brand}</p>
                     )}
                   </div>
                   <div className="text-right">
