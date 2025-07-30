@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
+const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -82,14 +82,14 @@ Remember: This is about celebrating their courage to eat and nourish themselves.
 
     const systemPrompt = isMealEncouragement ? systemPrompts["MEAL_ENCOURAGEMENT"] : (systemPrompts[therapyMode] || systemPrompts["ACT"]);
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${openAIApiKey}`,
+        "Authorization": `Bearer ${openRouterApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4.1-2025-04-14",
+        model: "anthropic/claude-3.5-sonnet",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message }
