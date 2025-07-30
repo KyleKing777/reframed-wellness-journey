@@ -72,8 +72,22 @@ const MealLogging = () => {
   useEffect(() => {
     const generateDailyEncouragement = async () => {
       try {
-        // Fetch today's meals for context
-        const today = new Date().toISOString().split('T')[0];
+        // Use consistent date logic
+        const getCurrentDateForApp = () => {
+          const now = new Date();
+          const currentHour = now.getHours();
+          
+          // If it's before 4 AM, consider it the previous day
+          if (currentHour < 4) {
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            return yesterday;
+          }
+          
+          return now;
+        };
+        
+        const today = getCurrentDateForApp().toISOString().split('T')[0];
         const { data: todayMeals } = await supabase
           .from('Meals')
           .select('meal_type, name, total_calories, total_protein, total_carbs, total_fat')
@@ -114,8 +128,23 @@ const MealLogging = () => {
       if (!user?.id) return;
 
       try {
+        // Use consistent date logic with TodaysMeals page
+        const getCurrentDateForApp = () => {
+          const now = new Date();
+          const currentHour = now.getHours();
+          
+          // If it's before 4 AM, consider it the previous day
+          if (currentHour < 4) {
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            return yesterday;
+          }
+          
+          return now;
+        };
+
         // Get today's meals count
-        const today = new Date().toISOString().split('T')[0];
+        const today = getCurrentDateForApp().toISOString().split('T')[0];
         const { data: todayMeals, error: todayError } = await supabase
           .from('Meals')
           .select('id')
@@ -167,8 +196,23 @@ const MealLogging = () => {
     if (!user?.id) return;
 
     try {
+      // Use consistent date logic with TodaysMeals page
+      const getCurrentDateForApp = () => {
+        const now = new Date();
+        const currentHour = now.getHours();
+        
+        // If it's before 4 AM, consider it the previous day
+        if (currentHour < 4) {
+          const yesterday = new Date(now);
+          yesterday.setDate(yesterday.getDate() - 1);
+          return yesterday;
+        }
+        
+        return now;
+      };
+
       // Get today's meals count
-      const today = new Date().toISOString().split('T')[0];
+      const today = getCurrentDateForApp().toISOString().split('T')[0];
       const { data: todayMeals, error: todayError } = await supabase
         .from('Meals')
         .select('id')
