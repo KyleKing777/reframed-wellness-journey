@@ -31,9 +31,14 @@ interface MealState {
 }
 const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Morning Snack', 'Afternoon Snack', 'Late Night Snack'];
 const MealLogging = () => {
+  console.log('🔥 MealLogging component loaded');
+  
   const {
     user
   } = useAuth();
+  
+  console.log('👤 User from context:', user?.id || 'NO USER');
+  
   const {
     toast
   } = useToast();
