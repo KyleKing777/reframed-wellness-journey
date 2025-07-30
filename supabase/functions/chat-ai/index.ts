@@ -89,7 +89,7 @@ Remember: This is about celebrating their courage to eat and nourish themselves.
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "anthropic/claude-3.5-sonnet",
+        model: "cohere/command-r-plus",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message }
