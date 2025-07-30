@@ -165,7 +165,9 @@ export type Database = {
           activity_level: string | null
           age: number | null
           avg_steps_per_day: number | null
+          bmr: number | null
           created_at: string
+          daily_caloric_goal: number | null
           email: string | null
           fear_foods: Json | null
           gender: string | null
@@ -173,6 +175,7 @@ export type Database = {
           height_cm: number | null
           id: number
           password: string | null
+          tdee: number | null
           therapist_description: string | null
           therapy_style: string | null
           user_id: string | null
@@ -184,7 +187,9 @@ export type Database = {
           activity_level?: string | null
           age?: number | null
           avg_steps_per_day?: number | null
+          bmr?: number | null
           created_at?: string
+          daily_caloric_goal?: number | null
           email?: string | null
           fear_foods?: Json | null
           gender?: string | null
@@ -192,6 +197,7 @@ export type Database = {
           height_cm?: number | null
           id?: number
           password?: string | null
+          tdee?: number | null
           therapist_description?: string | null
           therapy_style?: string | null
           user_id?: string | null
@@ -203,7 +209,9 @@ export type Database = {
           activity_level?: string | null
           age?: number | null
           avg_steps_per_day?: number | null
+          bmr?: number | null
           created_at?: string
+          daily_caloric_goal?: number | null
           email?: string | null
           fear_foods?: Json | null
           gender?: string | null
@@ -211,6 +219,7 @@ export type Database = {
           height_cm?: number | null
           id?: number
           password?: string | null
+          tdee?: number | null
           therapist_description?: string | null
           therapy_style?: string | null
           user_id?: string | null

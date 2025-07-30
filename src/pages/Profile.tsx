@@ -25,6 +25,9 @@ interface UserProfile {
   therapist_description: string | null;
   gender: string | null;
   fear_foods: string[];
+  bmr: number | null;
+  tdee: number | null;
+  daily_caloric_goal: number | null;
 }
 
 const Profile = () => {
@@ -76,6 +79,11 @@ const Profile = () => {
 
     setSaving(true);
     try {
+      // Calculate the health metrics
+      const bmr = calculateBMR();
+      const tdee = calculateTDEE();
+      const dailyCaloricGoal = calculateCaloricGoal();
+
       const { error } = await supabase
         .from('Users')
         .update({
@@ -90,11 +98,22 @@ const Profile = () => {
           therapy_style: profile.therapy_style,
           therapist_description: profile.therapist_description,
           gender: profile.gender,
-          fear_foods: profile.fear_foods
+          fear_foods: profile.fear_foods,
+          bmr: bmr,
+          tdee: tdee,
+          daily_caloric_goal: dailyCaloricGoal
         })
         .eq('id', profile.id);
 
       if (error) throw error;
+
+      // Update local state with calculated values
+      setProfile({
+        ...profile,
+        bmr: bmr,
+        tdee: tdee,
+        daily_caloric_goal: dailyCaloricGoal
+      });
 
       toast({
         title: "Profile updated!",
@@ -215,9 +234,10 @@ const Profile = () => {
     );
   }
 
-  const bmr = calculateBMR();
-  const tdee = calculateTDEE();
-  const caloricGoal = calculateCaloricGoal();
+  // Use stored values from database, fallback to calculated values
+  const bmr = profile.bmr || calculateBMR();
+  const tdee = profile.tdee || calculateTDEE();
+  const caloricGoal = profile.daily_caloric_goal || calculateCaloricGoal();
 
   return (
     <div className="p-4 space-y-6 max-w-4xl mx-auto">
