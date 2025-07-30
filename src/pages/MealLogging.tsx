@@ -243,19 +243,18 @@ const MealLogging = () => {
   };
 
   return (
-    <div className="p-4 space-y-6 max-w-2xl mx-auto min-h-screen">
-      {/* Header with encouragement */}
-      <div className="text-center space-y-2 py-8">
-        <h1 className="text-2xl font-bold text-foreground">Ready to Nourish?</h1>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-          {dynamicEncouragement}
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-md mx-auto px-6 py-8 space-y-8">
+        {/* Clean Header */}
+        <div className="text-center space-y-3">
+          <h1 className="text-3xl font-semibold text-foreground">Track Your Day</h1>
+          <p className="text-muted-foreground">
+            What would you like to log?
+          </p>
+        </div>
 
-      {/* Main meal type selector */}
-      <div className="space-y-4">
-        <p className="text-center text-muted-foreground text-sm">What would you like to log?</p>
-        <div className="grid grid-cols-2 gap-3">
+        {/* Clean Meal Type Grid */}
+        <div className="grid grid-cols-1 gap-3">
           {mealTypes.map((type) => (
             <button
               key={type}
@@ -263,25 +262,25 @@ const MealLogging = () => {
                 setSelectedMealType(type);
                 setIsAddMealOpen(true);
               }}
-              className="p-4 rounded-xl border border-border hover:border-primary/50 bg-card hover:bg-accent/50 transition-all duration-200 text-left group"
+              className="p-4 rounded-lg border border-border hover:border-primary/40 bg-card hover:bg-accent/30 transition-all duration-200 text-left group"
             >
               <div className="font-medium text-foreground group-hover:text-primary transition-colors">
                 {type}
               </div>
-            </button>))
-          }
+            </button>
+          ))}
         </div>
-      </div>
 
-      {/* Bubbly Stats */}
-      <div className="grid grid-cols-2 gap-4 mt-12">
-        <div className="text-center p-6 bg-gradient-healing rounded-xl shadow-gentle border border-primary/10">
-          <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">{mealsToday}</div>
-          <p className="text-xs text-muted-foreground mt-1">Meals Today</p>
-        </div>
-        <div className="text-center p-6 bg-gradient-healing rounded-xl shadow-gentle border border-primary/10">
-          <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">{daysStrong}</div>
-          <p className="text-xs text-muted-foreground mt-1">Days Strong</p>
+        {/* Clean Stats */}
+        <div className="grid grid-cols-2 gap-4 pt-4">
+          <div className="text-center p-4 bg-card rounded-lg border border-border">
+            <div className="text-2xl font-bold text-primary">{mealsToday}</div>
+            <p className="text-sm text-muted-foreground">Today</p>
+          </div>
+          <div className="text-center p-4 bg-card rounded-lg border border-border">
+            <div className="text-2xl font-bold text-primary">{daysStrong}</div>
+            <p className="text-sm text-muted-foreground">Day Streak</p>
+          </div>
         </div>
       </div>
 
