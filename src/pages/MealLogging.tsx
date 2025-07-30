@@ -381,11 +381,26 @@ const MealLogging = () => {
       const therapyMode = userProfile?.therapy_style || 'ACT';
       const meal = mealData || currentMeal;
 
+      // Create detailed meal description
+      const ingredientsList = selectedIngredients.map(ing => `${ing.quantity} ${ing.name}`).join(', ');
+      const mealDescription = `${meal.mealType}: ${ingredientsList}. Total nutrition: ${meal.totalCalories} calories, ${meal.totalProtein}g protein, ${meal.totalCarbs}g carbs, ${meal.totalFats}g fats.`;
+
       const response = await supabase.functions.invoke('chat-ai', {
         body: {
-          message: `Please provide a supportive, encouraging message celebrating this meal choice. Include the nutritional aspects in a positive way. Meal: ${meal.mealType} with ${meal.totalCalories} calories, ${meal.totalProtein}g protein, ${meal.totalCarbs}g carbs, ${meal.totalFats}g fats. Keep it brief and recovery-focused.`,
+          message: `Please celebrate this meal I just logged: ${mealDescription}. Focus on why eating this meal supports my recovery and health. Be specific about the foods I ate and their nutritional benefits.`,
           therapyMode,
-          userId: user?.id
+          userId: user?.id,
+          isMealEncouragement: true,
+          mealDetails: {
+            type: meal.mealType,
+            ingredients: selectedIngredients,
+            nutrition: {
+              calories: meal.totalCalories,
+              protein: meal.totalProtein,
+              carbs: meal.totalCarbs,
+              fats: meal.totalFats
+            }
+          }
         }
       });
       
@@ -397,8 +412,9 @@ const MealLogging = () => {
       }
     } catch (error) {
       console.error('Error generating encouragement:', error);
-      // Fallback to toast
-      const fallbackMessage = "You're doing an amazing job! Each meal is a step forward in your recovery journey.";
+      // Fallback to toast with specific meal details
+      const ingredientsList = selectedIngredients.map(ing => ing.name).join(', ');
+      const fallbackMessage = `Amazing work logging your ${currentMeal.mealType.toLowerCase()} with ${ingredientsList}! You're nourishing your body with ${Math.round(currentMeal.totalCalories)} calories of goodness. Every meal is a step forward! 💚`;
       setTimeout(() => {
         toast({
           title: "You're doing amazing! 💚",

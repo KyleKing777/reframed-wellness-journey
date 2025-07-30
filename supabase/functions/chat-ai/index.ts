@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const openRouterKey = Deno.env.get("OPENROUTER_API_KEY");
+const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, therapyMode, userId } = await req.json();
+    const { message, therapyMode, userId, isMealEncouragement, mealDetails } = await req.json();
 
     const systemPrompts: Record<string, string> = {
       ACT: `You are a warm, caring friend who happens to be trained in ACT therapy. You talk like a real person having a genuine conversation - not a therapist giving a session.
@@ -63,32 +63,46 @@ Your conversational style:
 - Offer skills as suggestions, not prescriptions
 
 You're sharing wisdom as a friend, not delivering therapy. Keep it real, validating, and human.`,
+
+      MEAL_ENCOURAGEMENT: `You are a warm, supportive friend celebrating someone's meal in their eating disorder recovery journey.
+
+CRITICAL: Keep responses to exactly 75 words. Be specific about the meal they logged.
+
+Your style for meal encouragement:
+- Celebrate the specific foods they ate by name
+- Explain why this meal supports their recovery (nutrition, self-care, courage)
+- Use warm, affirming language like "I'm so proud of you for..."
+- Reference specific nutritional benefits when relevant (protein for strength, carbs for energy, etc.)
+- Make it personal and genuine, like a best friend cheering them on
+- Include 1-2 supportive emojis naturally
+- Focus on the act of nourishment and self-care
+
+Remember: This is about celebrating their courage to eat and nourish themselves. Be specific, warm, and evidence-based.`
     };
 
-    const systemPrompt = systemPrompts[therapyMode] || systemPrompts["ACT"];
+    const systemPrompt = isMealEncouragement ? systemPrompts["MEAL_ENCOURAGEMENT"] : (systemPrompts[therapyMode] || systemPrompts["ACT"]);
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${openRouterKey}`,
+        "Authorization": `Bearer ${openAIApiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://reframed-wellness-journey.vercel.app/",  // optional, for leaderboard credit
-        "X-Title": "ReframED Chatbot"                                     // optional, for attribution
       },
       body: JSON.stringify({
-        model: "anthropic/claude-3.5-sonnet", // Using Claude 3.5 Sonnet through OpenRouter
+        model: "gpt-4.1-2025-04-14",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message }
         ],
-        max_tokens: 300  // Limit to ~200 words max
+        max_tokens: 150,
+        temperature: 0.7
       }),
     });
 
     const data = await response.json();
 
     if (!response.ok || !data.choices || !data.choices[0]) {
-      throw new Error(`OpenRouter error: ${response.status} - ${data?.error?.message || "Unknown error"}`);
+      throw new Error(`OpenAI error: ${response.status} - ${data?.error?.message || "Unknown error"}`);
     }
 
     const botResponse = data.choices[0].message.content;
