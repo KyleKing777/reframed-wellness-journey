@@ -139,11 +139,15 @@ const MealLogging = () => {
           const uniqueDates = [...new Set(allMeals.map(meal => meal.date))].sort((a, b) => b.localeCompare(a));
           
           let streak = 0;
-          const today = new Date();
+          const todayLocalDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format in local timezone
           
           for (let i = 0; i < uniqueDates.length; i++) {
-            const mealDate = new Date(uniqueDates[i]);
-            const daysDiff = Math.floor((today.getTime() - mealDate.getTime()) / (1000 * 60 * 60 * 24));
+            const mealDateStr = uniqueDates[i];
+            
+            // Calculate the difference in days using date strings to avoid timezone issues
+            const todayDate = new Date(todayLocalDate);
+            const mealDate = new Date(mealDateStr);
+            const daysDiff = Math.floor((todayDate.getTime() - mealDate.getTime()) / (1000 * 60 * 60 * 24));
             
             if (daysDiff === i) {
               streak++;
@@ -192,11 +196,15 @@ const MealLogging = () => {
         const uniqueDates = [...new Set(allMeals.map(meal => meal.date))].sort((a, b) => b.localeCompare(a));
         
         let streak = 0;
-        const today = new Date();
+        const todayLocalDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format in local timezone
         
         for (let i = 0; i < uniqueDates.length; i++) {
-          const mealDate = new Date(uniqueDates[i]);
-          const daysDiff = Math.floor((today.getTime() - mealDate.getTime()) / (1000 * 60 * 60 * 24));
+          const mealDateStr = uniqueDates[i];
+          
+          // Calculate the difference in days using date strings to avoid timezone issues
+          const todayDate = new Date(todayLocalDate);
+          const mealDate = new Date(mealDateStr);
+          const daysDiff = Math.floor((todayDate.getTime() - mealDate.getTime()) / (1000 * 60 * 60 * 24));
           
           if (daysDiff === i) {
             streak++;
