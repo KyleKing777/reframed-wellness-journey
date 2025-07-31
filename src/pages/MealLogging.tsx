@@ -73,7 +73,7 @@ const MealLogging = () => {
     const generateDailyEncouragement = async () => {
       try {
         // Fetch today's meals for context
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format in local timezone
         const { data: todayMeals } = await supabase
           .from('Meals')
           .select('meal_type, name, total_calories, total_protein, total_carbs, total_fat')
@@ -115,7 +115,7 @@ const MealLogging = () => {
 
       try {
         // Get today's meals count
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format in local timezone
         const { data: todayMeals, error: todayError } = await supabase
           .from('Meals')
           .select('id')
@@ -168,7 +168,7 @@ const MealLogging = () => {
 
     try {
       // Get today's meals count
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format in local timezone
       const { data: todayMeals, error: todayError } = await supabase
         .from('Meals')
         .select('id')
@@ -316,7 +316,7 @@ const MealLogging = () => {
         error: mealError
       } = await supabase.from('Meals').insert({
         user_id: user?.id,
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD format in local timezone
         meal_type: currentMeal.mealType,
         total_calories: currentMeal.totalCalories,
         total_protein: currentMeal.totalProtein,
