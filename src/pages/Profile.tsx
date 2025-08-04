@@ -299,6 +299,10 @@ const Profile = () => {
   const tdee = profile.tdee || calculateTDEE();
   const caloricGoal = profile.daily_caloric_goal || calculateCaloricGoal();
 
+  // Debug logging
+  console.log('Profile data:', profile);
+  console.log('isEditDialogOpen:', isEditDialogOpen);
+
   return (
     <div className="p-4 space-y-6 max-w-4xl mx-auto">
       <div className="text-center mb-6">
@@ -403,7 +407,10 @@ const Profile = () => {
       {/* Prominent Edit Button at Bottom */}
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
         <Button
-          onClick={() => setIsEditDialogOpen(true)}
+          onClick={() => {
+            console.log('Edit button clicked, opening dialog');
+            setIsEditDialogOpen(true);
+          }}
           size="lg"
           className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg px-8 py-3 rounded-full"
         >
@@ -413,15 +420,17 @@ const Profile = () => {
       </div>
 
       {/* Profile Edit Dialog */}
-      <ProfileEditDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        profile={profile}
-        onProfileChange={setProfile}
-        onSave={updateProfile}
-        saving={saving}
-        userEmail={user?.email}
-      />
+      {profile && (
+        <ProfileEditDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          profile={profile}
+          onProfileChange={setProfile}
+          onSave={updateProfile}
+          saving={saving}
+          userEmail={user?.email}
+        />
+      )}
     </div>
   );
 };
