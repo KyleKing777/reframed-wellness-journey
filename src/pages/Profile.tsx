@@ -9,6 +9,7 @@ import { User, Edit3, Save, LogOut, Heart, Target, Utensils, TrendingUp } from '
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ProfileEditDialog } from '@/components/ProfileEditDialog';
 
 interface UserProfile {
   id: number;
@@ -34,7 +35,7 @@ const Profile = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -163,7 +164,7 @@ const Profile = () => {
         title: "Profile updated!",
         description: "Your changes have been saved successfully.",
       });
-      setIsEditing(false);
+      // Dialog will handle closing
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -305,7 +306,7 @@ const Profile = () => {
           <User className="w-8 h-8 text-primary" />
         </div>
         <h1 className="text-2xl font-bold text-foreground mb-2">Your Profile</h1>
-        <p className="text-muted-foreground">Manage your account and recovery preferences</p>
+        <p className="text-muted-foreground">Track your health metrics and recovery progress</p>
       </div>
 
       {/* Key Metrics Dashboard */}
@@ -321,9 +322,9 @@ const Profile = () => {
         
         <Card className="shadow-gentle">
           <CardContent className="pt-6 text-center">
-            <Target className="w-6 h-6 text-accent mx-auto mb-2" />
+            <TrendingUp className="w-6 h-6 text-primary mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">TDEE</p>
-            <p className="text-2xl font-bold text-accent">{tdee}</p>
+            <p className="text-2xl font-bold text-primary">{tdee}</p>
             <p className="text-xs text-muted-foreground">maintenance calories</p>
           </CardContent>
         </Card>
@@ -374,215 +375,6 @@ const Profile = () => {
         </CardContent>
       </Card>
 
-      {/* Profile Information */}
-      <Card className="shadow-gentle">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Profile Information</CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => isEditing ? updateProfile() : setIsEditing(true)}
-              disabled={saving}
-            >
-              {isEditing ? (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  {saving ? 'Saving...' : 'Save'}
-                </>
-              ) : (
-                <>
-                  <Edit3 className="w-4 h-4 mr-2" />
-                  Edit
-                </>
-              )}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={profile.username || ''}
-                onChange={(e) => setProfile({ ...profile, username: e.target.value })}
-                disabled={!isEditing}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={profile.email || user?.email || ''}
-                disabled
-                className="bg-muted"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="gender">Gender</Label>
-              <Select
-                value={profile.gender || ''}
-                onValueChange={(value) => setProfile({ ...profile, gender: value })}
-                disabled={!isEditing}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="age">Age</Label>
-              <Input
-                id="age"
-                type="number"
-                value={profile.age || ''}
-                onChange={(e) => setProfile({ ...profile, age: parseInt(e.target.value) || null })}
-                disabled={!isEditing}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="height">Height (cm)</Label>
-              <Input
-                id="height"
-                type="number"
-                value={profile.height_cm || ''}
-                onChange={(e) => setProfile({ ...profile, height_cm: parseFloat(e.target.value) || null })}
-                disabled={!isEditing}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="weight">Current Weight (kg)</Label>
-              <Input
-                id="weight"
-                type="number"
-                step="0.1"
-                value={profile.weight_kg || ''}
-                onChange={(e) => setProfile({ ...profile, weight_kg: parseFloat(e.target.value) || null })}
-                disabled={!isEditing}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="goal-weight">Goal Weight (kg)</Label>
-              <Input
-                id="goal-weight"
-                type="number"
-                step="0.1"
-                value={profile.goal_weight_kg || ''}
-                onChange={(e) => setProfile({ ...profile, goal_weight_kg: parseFloat(e.target.value) || null })}
-                disabled={!isEditing}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="weight-gain-goal">Weekly Gain Goal (kg)</Label>
-              <Input
-                id="weight-gain-goal"
-                type="number"
-                step="0.1"
-                value={profile.weekly_weight_gain_goal || ''}
-                onChange={(e) => setProfile({ ...profile, weekly_weight_gain_goal: parseFloat(e.target.value) || null })}
-                disabled={!isEditing}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="steps">Average Daily Steps</Label>
-              <Input
-                id="steps"
-                type="number"
-                value={profile.avg_steps_per_day || ''}
-                onChange={(e) => setProfile({ ...profile, avg_steps_per_day: parseInt(e.target.value) || null })}
-                disabled={!isEditing}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="activity-level">Activity Level</Label>
-            <Select
-              value={profile.activity_level || ''}
-              onValueChange={(value) => setProfile({ ...profile, activity_level: value })}
-              disabled={!isEditing}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select activity level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sedentary">Sedentary</SelectItem>
-                <SelectItem value="lightly-active">Lightly Active</SelectItem>
-                <SelectItem value="moderately-active">Moderately Active</SelectItem>
-                <SelectItem value="very-active">Very Active</SelectItem>
-                <SelectItem value="extremely-active">Extremely Active</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="therapy-style">Therapy Style Preference</Label>
-            <Select
-              value={profile.therapy_style || ''}
-              onValueChange={(value) => setProfile({ ...profile, therapy_style: value })}
-              disabled={!isEditing}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select therapy style" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ACT">Acceptance and Commitment Therapy (ACT)</SelectItem>
-                <SelectItem value="CBT">Cognitive Behavioral Therapy (CBT)</SelectItem>
-                <SelectItem value="DBT">Dialectical Behavior Therapy (DBT)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="therapy-description">Therapy Preferences</Label>
-            <Textarea
-              id="therapy-description"
-              placeholder="Describe what kind of support works best for you..."
-              value={profile.therapist_description || ''}
-              onChange={(e) => setProfile({ ...profile, therapist_description: e.target.value })}
-              disabled={!isEditing}
-              rows={3}
-            />
-          </div>
-
-          {isEditing && (
-            <div className="flex gap-3 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsEditing(false);
-                  fetchProfile(); // Reset changes
-                }}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={updateProfile}
-                disabled={saving}
-                className="flex-1"
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Encouraging Message */}
       <Card className="bg-gradient-healing border-primary/20 shadow-gentle">
         <CardContent className="pt-6 text-center">
@@ -607,6 +399,29 @@ const Profile = () => {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Prominent Edit Button at Bottom */}
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+        <Button
+          onClick={() => setIsEditDialogOpen(true)}
+          size="lg"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg px-8 py-3 rounded-full"
+        >
+          <Edit3 className="w-5 h-5 mr-2" />
+          Edit Profile
+        </Button>
+      </div>
+
+      {/* Profile Edit Dialog */}
+      <ProfileEditDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        profile={profile}
+        onProfileChange={setProfile}
+        onSave={updateProfile}
+        saving={saving}
+        userEmail={user?.email}
+      />
     </div>
   );
 };
