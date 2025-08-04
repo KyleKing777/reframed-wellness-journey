@@ -31,6 +31,44 @@ export const NutritionixIngredientSearch = ({ onIngredientAdd }: NutritionixIngr
   const { toast } = useToast();
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
+  // Helper function to detect if search term contains brand keywords
+  const isBrandSearch = (term: string) => {
+    const brandKeywords = ['mcdonalds', 'subway', 'starbucks', 'pepsi', 'coca cola', 'kraft', 'nestle', 'general mills', 'kellogg', 'oreo', 'doritos', 'lay\'s', 'pringles', 'cheerios', 'frosted flakes'];
+    const lowerTerm = term.toLowerCase();
+    return brandKeywords.some(keyword => lowerTerm.includes(keyword)) || 
+           term.split(' ').length >= 2; // Multi-word searches often indicate brands
+  };
+
+  // Helper function to sort and prioritize results
+  const optimizeSearchResults = (results: NutritionixSearchResult) => {
+    if (!results) return results;
+
+    const searchLower = searchTerm.toLowerCase();
+    const isBrandQuery = isBrandSearch(searchTerm);
+
+    // Sort branded foods by relevance
+    const sortedBranded = results.branded?.sort((a, b) => {
+      const aBrandMatch = a.brand_name?.toLowerCase().includes(searchLower) ? 10 : 0;
+      const aNameMatch = a.food_name?.toLowerCase().includes(searchLower) ? 5 : 0;
+      const bBrandMatch = b.brand_name?.toLowerCase().includes(searchLower) ? 10 : 0;
+      const bNameMatch = b.food_name?.toLowerCase().includes(searchLower) ? 5 : 0;
+      
+      return (bBrandMatch + bNameMatch) - (aBrandMatch + aNameMatch);
+    }) || [];
+
+    // Sort common foods by name relevance
+    const sortedCommon = results.common?.sort((a, b) => {
+      const aScore = a.food_name?.toLowerCase().includes(searchLower) ? 1 : 0;
+      const bScore = b.food_name?.toLowerCase().includes(searchLower) ? 1 : 0;
+      return bScore - aScore;
+    }) || [];
+
+    return {
+      branded: sortedBranded,
+      common: sortedCommon
+    };
+  };
+
   // Debounced search
   useEffect(() => {
     if (searchTimeoutRef.current) {
@@ -42,7 +80,8 @@ export const NutritionixIngredientSearch = ({ onIngredientAdd }: NutritionixIngr
         setIsSearching(true);
         try {
           const results = await nutritionixAPI.searchFoods(searchTerm);
-          setSearchResults(results);
+          const optimizedResults = optimizeSearchResults(results);
+          setSearchResults(optimizedResults);
         } catch (error) {
           console.error('Search error:', error);
           toast({
@@ -53,7 +92,7 @@ export const NutritionixIngredientSearch = ({ onIngredientAdd }: NutritionixIngr
         } finally {
           setIsSearching(false);
         }
-      }, 500);
+      }, 300); // Reduced debounce time for better responsiveness
     } else {
       setSearchResults(null);
     }
@@ -199,83 +238,136 @@ export const NutritionixIngredientSearch = ({ onIngredientAdd }: NutritionixIngr
 
         {searchResults && (
           <div className="mt-4 space-y-3 max-h-96 overflow-y-auto">
-            {/* Common Foods */}
-            {searchResults.common?.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Common Foods</h4>
-                <div className="space-y-2">
-                  {searchResults.common.map((food, index) => (
-                    <div 
-                      key={`common-${index}`}
-                      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
-                      onClick={() => handleSelectFood(food, false)}
-                    >
-                      <div className="flex items-center gap-3">
-                        {food.photo?.thumb && (
-                          <img 
-                            src={food.photo.thumb} 
-                            alt={food.food_name}
-                            className="w-10 h-10 rounded-md object-cover"
-                          />
-                        )}
-                        <div>
-                          <p className="font-medium">{food.food_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            per {food.serving_qty} {food.serving_unit}
-                          </p>
-                        </div>
-                      </div>
-                      <Plus className="w-5 h-5 text-primary" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Branded Foods */}
-            {searchResults.branded?.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Branded Products</h4>
-                <div className="space-y-2">
-                  {searchResults.branded.map((food, index) => (
-                    <div 
-                      key={`branded-${index}`}
-                      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
-                      onClick={() => handleSelectFood(food, true)}
-                    >
-                      <div className="flex items-center gap-3">
-                        {food.photo?.thumb && (
-                          <img 
-                            src={food.photo.thumb} 
-                            alt={food.food_name}
-                            className="w-10 h-10 rounded-md object-cover"
-                          />
-                        )}
-                        <div>
-                          <p className="font-medium">{food.food_name}</p>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              <Package className="w-3 h-3 mr-1" />
-                              {food.brand_name}
-                            </Badge>
-                            <span className="text-sm text-muted-foreground">
-                              {food.nf_calories} cal
-                            </span>
+            {(() => {
+              const showBrandedFirst = isBrandSearch(searchTerm) && searchResults.branded?.length > 0;
+              
+              return (
+                <>
+                  {/* Show branded products first if it's a brand search */}
+                  {showBrandedFirst && (
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                        <Package className="w-4 h-4" />
+                        Branded Products
+                      </h4>
+                      <div className="space-y-2">
+                        {searchResults.branded.map((food, index) => (
+                          <div 
+                            key={`branded-${index}`}
+                            className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
+                            onClick={() => handleSelectFood(food, true)}
+                          >
+                            <div className="flex items-center gap-3">
+                              {food.photo?.thumb && (
+                                <img 
+                                  src={food.photo.thumb} 
+                                  alt={food.food_name}
+                                  className="w-10 h-10 rounded-md object-cover"
+                                />
+                              )}
+                              <div>
+                                <p className="font-medium">{food.food_name}</p>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    <Package className="w-3 h-3 mr-1" />
+                                    {food.brand_name}
+                                  </Badge>
+                                  <span className="text-sm text-muted-foreground">
+                                    {food.nf_calories} cal
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <Plus className="w-5 h-5 text-primary" />
                           </div>
-                        </div>
+                        ))}
                       </div>
-                      <Plus className="w-5 h-5 text-primary" />
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                  )}
 
-            {searchResults.common?.length === 0 && searchResults.branded?.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
-                No foods found. Try a different search term.
-              </div>
-            )}
+                  {/* Common Foods */}
+                  {searchResults.common?.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Common Foods</h4>
+                      <div className="space-y-2">
+                        {searchResults.common.map((food, index) => (
+                          <div 
+                            key={`common-${index}`}
+                            className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
+                            onClick={() => handleSelectFood(food, false)}
+                          >
+                            <div className="flex items-center gap-3">
+                              {food.photo?.thumb && (
+                                <img 
+                                  src={food.photo.thumb} 
+                                  alt={food.food_name}
+                                  className="w-10 h-10 rounded-md object-cover"
+                                />
+                              )}
+                              <div>
+                                <p className="font-medium">{food.food_name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  per {food.serving_qty} {food.serving_unit}
+                                </p>
+                              </div>
+                            </div>
+                            <Plus className="w-5 h-5 text-primary" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Show branded products last if it's not a brand search */}
+                  {!showBrandedFirst && searchResults.branded?.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                        <Package className="w-4 h-4" />
+                        Branded Products
+                      </h4>
+                      <div className="space-y-2">
+                        {searchResults.branded.map((food, index) => (
+                          <div 
+                            key={`branded-${index}`}
+                            className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
+                            onClick={() => handleSelectFood(food, true)}
+                          >
+                            <div className="flex items-center gap-3">
+                              {food.photo?.thumb && (
+                                <img 
+                                  src={food.photo.thumb} 
+                                  alt={food.food_name}
+                                  className="w-10 h-10 rounded-md object-cover"
+                                />
+                              )}
+                              <div>
+                                <p className="font-medium">{food.food_name}</p>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    <Package className="w-3 h-3 mr-1" />
+                                    {food.brand_name}
+                                  </Badge>
+                                  <span className="text-sm text-muted-foreground">
+                                    {food.nf_calories} cal
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <Plus className="w-5 h-5 text-primary" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {searchResults.common?.length === 0 && searchResults.branded?.length === 0 && (
+                    <div className="text-center text-muted-foreground py-8">
+                      No foods found. Try a different search term.
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
       </CardContent>
