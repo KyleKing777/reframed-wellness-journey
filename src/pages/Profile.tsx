@@ -49,18 +49,51 @@ const Profile = () => {
     if (!user) return;
 
     try {
+      // Query by user_id to satisfy RLS and avoid email-based visibility issues
       const { data, error } = await supabase
         .from('Users')
         .select('*')
-        .eq('email', user.email)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (error) throw error;
+
+      let profileRow = data;
+
+      // If no profile exists yet, create one from auth metadata
+      if (!profileRow) {
+        const meta = (user as any).user_metadata || {};
+        const newProfile = {
+          user_id: user.id,
+          email: user.email,
+          username: meta.username ?? null,
+          gender: meta.gender ?? null,
+          age: meta.age ?? null,
+          height_cm: meta.height_cm ?? null,
+          weight_kg: meta.weight_kg ?? null,
+          goal_weight_kg: meta.goal_weight_kg ?? null,
+          weekly_weight_gain_goal: meta.weekly_weight_gain_goal ?? null,
+          activity_level: meta.activity_level ?? null,
+          avg_steps_per_day: meta.avg_steps_per_day ?? null,
+          therapy_style: meta.therapy_style ?? null,
+          therapist_description: meta.therapist_description ?? null,
+          fear_foods: [] as string[],
+        };
+
+        const { data: inserted, error: insertError } = await supabase
+          .from('Users')
+          .insert(newProfile)
+          .select('*')
+          .single();
+
+        if (insertError) throw insertError;
+        profileRow = inserted;
+      }
       
       // Handle the type conversion for fear_foods
       const profileData: UserProfile = {
-        ...data,
-        fear_foods: Array.isArray(data.fear_foods) ? data.fear_foods.filter((food): food is string => typeof food === 'string') : []
+        ...profileRow,
+        fear_foods: Array.isArray(profileRow.fear_foods) ? profileRow.fear_foods.filter((food): food is string => typeof food === 'string') : []
       };
       
       setProfile(profileData);
