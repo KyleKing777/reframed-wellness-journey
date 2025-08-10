@@ -130,22 +130,20 @@ export const MealDescriptionDialog = ({
 
     setIsSaving(true);
     try {
-      const { data: mealData, error: mealError } = await supabase
-        .from('Meals')
-        .insert({
-          user_id: userId,
-          date: new Date().toISOString().split('T')[0],
+      // Save via Edge Function (estimates and inserts in one step)
+      const { data, error } = await supabase.functions.invoke('analyze-meal', {
+        body: {
+          mode: 'save',
+          description: description.trim(),
           meal_type: selectedMealType,
-          name: description.trim(),
-          total_calories: nutritionEstimate.calories,
-          total_protein: nutritionEstimate.protein,
-          total_carbs: nutritionEstimate.carbs,
-          total_fat: nutritionEstimate.fats
-        })
-        .select()
-        .single();
+        },
+      });
 
-      if (mealError) throw mealError;
+      if (error) throw error;
+
+      const mealRow = data?.meal;
+      const nutrition = data?.nutrition ?? nutritionEstimate;
+      if (!mealRow) throw new Error('Failed to save meal');
 
       toast({
         title: "Perfect!",

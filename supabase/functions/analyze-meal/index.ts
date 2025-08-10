@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,8 +15,8 @@ serve(async (req) => {
   }
 
   try {
-    const { description } = await req.json();
-    console.log('Analyzing meal:', description);
+    const { description, mode = 'estimate', meal_type, date } = await req.json();
+    console.log('Analyzing meal:', { description, mode, meal_type, date });
 
     if (!openRouterKey) {
       console.error('OpenRouter API key not found');
@@ -45,50 +46,65 @@ serve(async (req) => {
       "fats": number
     }`;
 
-    console.log('Making request to OpenRouter...');
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openRouterKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://reframed-wellness-journey.vercel.app/',
-        'X-Title': 'ReframED Meal Analysis'
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-3.5-sonnet',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are a nutritional analysis expert with access to current nutritional databases. Search for accurate nutritional information and provide realistic estimates based on typical serving sizes. Always respond with valid JSON only.' 
-          },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 200,
-        temperature: 0.2,
-      }),
-    });
+    // Try multiple models in case some are unavailable under this key
+    const preferredModels = [
+      'openai/gpt-4o-mini',
+      'cohere/command-r-plus',
+      'google/gemini-1.5-flash'
+    ];
 
-    console.log('OpenRouter response status:', response.status);
-    const data = await response.json();
-    console.log('OpenRouter response data:', data);
-    
-    if (!response.ok) {
-      console.error('OpenRouter API error:', data);
-      throw new Error(`OpenRouter API error: ${response.status} - ${data.error?.message || 'Unknown error'}`);
+    let data: any = null;
+    let lastStatus = 0;
+    let lastErrorMsg = '';
+
+    for (const model of preferredModels) {
+      console.log('OpenRouter: attempting model', model);
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openRouterKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://reframed-wellness-journey.vercel.app/',
+          'X-Title': 'ReframED Meal Analysis'
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You are a nutritional analysis expert. ALWAYS respond with valid JSON only. Estimate macronutrients based on typical serving sizes and cooking methods.'
+            },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 200,
+          temperature: 0.2
+        })
+      });
+
+      const respJson = await response.json();
+      console.log('Model response status:', response.status);
+
+      if (response.ok && respJson?.choices?.[0]) {
+        data = respJson;
+        break;
+      }
+
+      lastStatus = response.status;
+      lastErrorMsg = respJson?.error?.message || 'Unknown error';
+      console.error(`Model ${model} failed - ${lastStatus}: ${lastErrorMsg}`);
     }
-    
-    if (!data.choices || !data.choices[0]) {
-      console.error('No choices in response:', data);
-      throw new Error('No response choices returned from OpenRouter');
+
+    if (!data) {
+      throw new Error(`OpenRouter error: ${lastStatus} - ${lastErrorMsg}`);
     }
-    
+
     const content = data.choices[0].message.content;
     console.log('Raw response content:', content);
-    
+
     // Try to extract JSON from response
-    let nutritionData;
+    let nutritionData: { calories: number; protein: number; carbs: number; fats: number };
     try {
-      // Clean the content - remove any markdown formatting or extra text
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       const jsonStr = jsonMatch ? jsonMatch[0] : content;
       nutritionData = JSON.parse(jsonStr);
@@ -98,10 +114,66 @@ serve(async (req) => {
       throw new Error('Failed to parse nutrition data from response');
     }
 
-    // Validate the response has required fields
-    if (!nutritionData.calories || !nutritionData.protein || !nutritionData.carbs || !nutritionData.fats) {
+    // Validate required fields
+    const hasAll =
+      typeof nutritionData.calories === 'number' &&
+      typeof nutritionData.protein === 'number' &&
+      typeof nutritionData.carbs === 'number' &&
+      typeof nutritionData.fats === 'number';
+
+    if (!hasAll) {
       console.error('Missing required fields in response:', nutritionData);
       throw new Error('Incomplete nutrition data received');
+    }
+
+    // If mode === 'save', insert into Meals as the authenticated user
+    if (mode === 'save') {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase environment not configured');
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } }
+      });
+
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user) {
+        console.error('Auth error:', authError);
+        throw new Error('Not authenticated');
+      }
+
+      const user_id = authData.user.id;
+      const mealDate = date || new Date().toISOString().split('T')[0];
+
+      const insertPayload = {
+        user_id,
+        date: mealDate,
+        meal_type,
+        name: (description || '').trim(),
+        total_calories: nutritionData.calories,
+        total_protein: nutritionData.protein,
+        total_carbs: nutritionData.carbs,
+        total_fat: nutritionData.fats
+      } as const;
+
+      const { data: insertData, error: insertError } = await supabase
+        .from('Meals')
+        .insert(insertPayload)
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw new Error(insertError.message);
+      }
+
+      console.log('Meal inserted:', insertData);
+      return new Response(
+        JSON.stringify({ meal: insertData, nutrition: nutritionData }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('Successfully parsed nutrition data:', nutritionData);
