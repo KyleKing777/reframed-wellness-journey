@@ -82,27 +82,49 @@ Remember: This is about celebrating their courage to eat and nourish themselves.
 
     const systemPrompt = isMealEncouragement ? systemPrompts["MEAL_ENCOURAGEMENT"] : (systemPrompts[therapyMode] || systemPrompts["ACT"]);
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openRouterApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "cohere/command-r-plus",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: message }
-        ],
-        max_tokens: 150,
-        temperature: 0.7
-      }),
-    });
+    // Try multiple models in case some are not available on the provided OpenRouter key
+    const preferredModels = [
+      "cohere/command-r-plus",
+      "openai/gpt-4o-mini",
+      "google/gemini-1.5-flash"
+    ];
 
-    const data = await response.json();
+    let data: any = null;
+    let lastStatus = 0;
+    let lastErrorMsg = "";
 
-    if (!response.ok || !data.choices || !data.choices[0]) {
-      throw new Error(`OpenAI error: ${response.status} - ${data?.error?.message || "Unknown error"}`);
+    for (const model of preferredModels) {
+      console.log("chat-ai: attempting model:", model);
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openRouterApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: message }
+          ],
+          max_tokens: 150,
+          temperature: 0.7
+        }),
+      });
+
+      const respJson = await response.json();
+      if (response.ok && respJson?.choices?.[0]) {
+        data = respJson;
+        break;
+      }
+
+      lastStatus = response.status;
+      lastErrorMsg = respJson?.error?.message || "Unknown error";
+      console.error(`chat-ai: model ${model} failed - ${lastStatus}: ${lastErrorMsg}`);
+    }
+
+    if (!data) {
+      throw new Error(`OpenRouter error: ${lastStatus} - ${lastErrorMsg}`);
     }
 
     const botResponse = data.choices[0].message.content;
