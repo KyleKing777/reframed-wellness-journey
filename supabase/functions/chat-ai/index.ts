@@ -82,10 +82,19 @@ Remember: This is about celebrating their courage to eat and nourish themselves.
 
     const systemPrompt = isMealEncouragement ? systemPrompts["MEAL_ENCOURAGEMENT"] : (systemPrompts[therapyMode] || systemPrompts["ACT"]);
 
-    // Try multiple models in case some are not available on the provided OpenRouter key
-    const preferredModels = [
-      "cohere/command-r-plus",
+    const modelMap = {
+      ACT: ["openai/gpt-4o-mini", "cohere/command-r-plus", "google/gemini-1.5-flash"],
+      CBT: ["cohere/command-r-plus", "openai/gpt-4o-mini", "google/gemini-1.5-flash"],
+      DBT: ["google/gemini-1.5-flash", "openai/gpt-4o-mini", "cohere/command-r-plus"],
+      MEAL_ENCOURAGEMENT: ["openai/gpt-4o-mini", "cohere/command-r-plus"],
+    } as Record<string, string[]>;
+
+    const tempMap = { ACT: 0.7, CBT: 0.5, DBT: 0.6, MEAL_ENCOURAGEMENT: 0.7 } as Record<string, number>;
+
+    const modeKey = isMealEncouragement ? "MEAL_ENCOURAGEMENT" : (therapyMode || "ACT");
+    const preferredModels = modelMap[modeKey] || [
       "openai/gpt-4o-mini",
+      "cohere/command-r-plus",
       "google/gemini-1.5-flash"
     ];
 
@@ -108,7 +117,7 @@ Remember: This is about celebrating their courage to eat and nourish themselves.
             { role: "user", content: message }
           ],
           max_tokens: 150,
-          temperature: 0.7
+          temperature: tempMap[modeKey] ?? 0.7
         }),
       });
 
